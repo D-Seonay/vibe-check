@@ -1,0 +1,20 @@
+{
+  "name": "spotify-svg-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
+    "test": "jest --env=node --runInBand",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  }
+}
