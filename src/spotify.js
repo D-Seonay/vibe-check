@@ -29,3 +29,25 @@ export async function getTopTracks(accessToken, { timeRange = 'short_term', limi
     Authorization: `Bearer ${accessToken}`,
   });
 }
+
+// NEW: recently played tracks (requires user-read-recently-played, implicitly covered by playback scopes in many apps,
+// but if 401, add the scope explicitly in /connect if needed)
+export async function getRecentlyPlayed(accessToken, { limit = 10 } = {}) {
+  return await get(`https://api.spotify.com/v1/me/player/recently-played?limit=${Math.max(1, Math.min(50, limit))}`, {
+    Authorization: `Bearer ${accessToken}`,
+  });
+}
+
+// NEW: top artists
+export async function getTopArtists(accessToken, { timeRange = 'short_term', limit = 5 } = {}) {
+  return await get(`https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}&limit=${Math.max(1, Math.min(10, limit))}`, {
+    Authorization: `Bearer ${accessToken}`,
+  });
+}
+
+// NEW: profile info
+export async function getMe(accessToken) {
+  return await get('https://api.spotify.com/v1/me', {
+    Authorization: `Bearer ${accessToken}`,
+  });
+}
