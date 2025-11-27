@@ -1,9 +1,15 @@
 // src/svg.js
-function sanitizeText(text, maxLen = 100) {
-  if (!text) return "";
-  const s = String(text).replace(/[<>]/g, "");
-  return s.length > maxLen ? s.slice(0, maxLen - 1) + "…" : s;
+function sanitizeText(str, maxLength = 100) {
+  return [...String(str)]
+    .slice(0, maxLength)
+    .join("")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
+
 
 export function renderNowPlayingSVG(nowPlaying) {
   const width = 540;
@@ -69,9 +75,12 @@ export function renderTopTracksSVG(items) {
     const name = sanitizeText(t.name, 50);
     const artist = sanitizeText(t.artists.map((a) => a.name).join(", "), 60);
     const y = padding + lineHeight * (i + 2);
-    lines += `<text x="${padding}" y="${y}" fill="${sub}" font-size="14" font-family="system-ui" >${
-      i + 1
-    }. ${name} — ${artist}</text>\n`;
+    lines += `
+  <text x="${padding}" y="${y}" fill="#B3B3B3" font-size="14" font-family="system-ui">
+    ${i + 1}. ${name} — ${artist}${playedAt ? " • " + sanitizeText(playedAt, 40) : ""}
+  </text>
+`;
+
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
