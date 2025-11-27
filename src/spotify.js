@@ -32,7 +32,7 @@ export async function getTopTracks(accessToken, { timeRange = 'short_term', limi
 
 // NEW: recently played tracks (requires user-read-recently-played, implicitly covered by playback scopes in many apps,
 // but if 401, add the scope explicitly in /connect if needed)
-export async function getRecentlyPlayed(accessToken, { limit = 10 } = {}) {
+export async function getRecentlyPlayed(accessToken, { limit = 50 } = {}) {
   return await get(`https://api.spotify.com/v1/me/player/recently-played?limit=${Math.max(1, Math.min(50, limit))}`, {
     Authorization: `Bearer ${accessToken}`,
   });
