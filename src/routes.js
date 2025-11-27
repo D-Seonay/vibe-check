@@ -196,7 +196,7 @@ export function createRouter(config) {
   router.get('/api/recent-tracks', async (req, res) => {
     try {
       const jwt = req.query.jwt;
-      const limit = Math.max(1, Math.min(10, Number(req.query.limit || 10)));
+      const limit = Math.max(1, Math.min(50, Number(req.query.limit || 10)));
       if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
       if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
 
