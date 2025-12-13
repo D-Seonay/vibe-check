@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="<%= width %>" height="<%= height %>" viewBox="0 0 <%= width %> <%= height %>" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Profile">
+  <title>Spotify Profile</title>
+  <% if (gradient_bg) { %>
+    <defs>
+      <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="<%= gradient_start_color %>" />
+        <stop offset="100%" stop-color="<%= gradient_end_color %>" />
+      </linearGradient>
+    </defs>
+  <% } %>
+  <rect x="0" y="0" width="<%= width %>" height="<%= height %>" fill="<%= bgFill %>" rx="<%= border_radius %>" />
+  <% if (hasImage) { %>
+    <defs>
+      <clipPath id="clipCircle">
+        <circle cx="50" cy="50" r="40" />
+      </clipPath>
+    </defs>
+    <image x="10" y="10" width="80" height="80" href="data:image/jpeg;base64,<%= imageAsB64 %>" clip-path="url(#clipCircle)" />
+  <% } %>
+  <text x="<%= textX %>" y="32" fill="<%= text_color %>" font-size="20" font-family="system-ui" font-weight="700"><%= name %></text>
+  <% if (show_followers) { %>
+    <text x="<%= textX %>" y="56" fill="<%= subtext_color %>" font-size="14" font-family="system-ui">Followers: <%= followers %></text>
+  <% } %>
+  <% if (show_id) { %>
+    <text x="<%= textX %>" y="78" fill="<%= subtext_color %>" font-size="12" font-family="system-ui">ID: <%= profileId %></text>
+  <% } %>
+  <% if (topArtist) { %>
+    <% if (hasArtistImage) { %>
+      <defs>
+        <clipPath id="clipCircleArtist">
+          <circle cx="330" cy="50" r="40" />
+        </clipPath>
+      </defs>
+      <image x="290" y="10" width="80" height="80" href="data:image/jpeg;base64,<%= topArtistImageB64 %>" clip-path="url(#clipCircleArtist)" />
+    <% } %>
+    <text x="16" y="130" fill="<%= title_color %>" font-size="16" font-family="system-ui" font-weight="600">Top 1 Artiste (ce mois)</text>
+    <text x="16" y="155" fill="<%= subtext_color %>" font-size="14" font-family="system-ui"><%= artistName %></text>
+    <text x="16" y="175" fill="<%= subtext_color %>" font-size="12" font-family="system-ui" font-style="italic">Temps d'écoute non disponible via l'API</text>
+  <% } %>
+</svg>

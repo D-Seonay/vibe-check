@@ -300,7 +300,7 @@ export function createRouter(config) {
         text_color = 'FFFFFF',
         subtext_color = 'B3B3B3',
         title_color = 'FFFFFF',
-        show_id = 'true',
+        show_id = 'false',
         show_followers = 'true',
         show_top_artist = 'true',
         gradient_bg = 'false',
