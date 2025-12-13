@@ -200,12 +200,30 @@ export function renderCurrentStatusSVG(nowPlaying) {
 }
 
 // NEW: Profile card
-export function renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB64) {
+export function renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB64, options = {}) {
+  const {
+    bg_color = '#121212',
+    text_color = '#FFFFFF',
+    subtext_color = '#B3B3B3',
+    title_color = '#FFFFFF',
+    show_id = true,
+    show_followers = true,
+    gradient_bg = false,
+    gradient_start_color = '#444444',
+    gradient_end_color = '#121212',
+    border_radius = 8,
+  } = options;
+
   const width = 540;
-  const height = 200;
+  const height = topArtist ? 200 : 100;
   const name = sanitizeText(profile?.display_name || "Utilisateur Spotify", 60);
   const followers = profile?.followers?.total ?? 0;
   const hasImage = imageAsB64 !== null;
+
+  let bgFill = bg_color;
+  if (gradient_bg) {
+    bgFill = `url(#bgGradient)`;
+  }
 
   let imagePart = '';
   if (hasImage) {
@@ -238,23 +256,31 @@ export function renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB
     }
     topArtistPart = `
       ${artistImagePart}
-      <text x="16" y="130" fill="#FFFFFF" font-size="16" font-family="system-ui" font-weight="600">Top 1 Artiste (ce mois)</text>
-      <text x="16" y="155" fill="#B3B3B3" font-size="14" font-family="system-ui">${artistName}</text>
-      <text x="16" y="175" fill="#B3B3B3" font-size="12" font-family="system-ui" font-style="italic">Temps d'écoute non disponible via l'API</text>
+      <text x="16" y="130" fill="${title_color}" font-size="16" font-family="system-ui" font-weight="600">Top 1 Artiste (ce mois)</text>
+      <text x="16" y="155" fill="${subtext_color}" font-size="14" font-family="system-ui">${artistName}</text>
+      <text x="16" y="175" fill="${subtext_color}" font-size="12" font-family="system-ui" font-style="italic">Temps d'écoute non disponible via l'API</text>
     `;
+  }
+  
+  let followersPart = '';
+  if (show_followers) {
+    followersPart = `<text x="${textX}" y="56" fill="${subtext_color}" font-size="14" font-family="system-ui">Followers: ${followers}</text>`;
+  }
+
+  let idPart = '';
+  if (show_id) {
+    idPart = `<text x="${textX}" y="78" fill="${subtext_color}" font-size="12" font-family="system-ui">ID: ${sanitizeText(profile?.id || "", 40)}</text>`;
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Profile">
   <title>Spotify Profile</title>
-  <rect x="0" y="0" width="${width}" height="${height}" fill="#121212" rx="8" />
+  ${gradient_bg ? `<defs><linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="${gradient_start_color}" /><stop offset="100%" stop-color="${gradient_end_color}" /></linearGradient></defs>`: ''}
+  <rect x="0" y="0" width="${width}" height="${height}" fill="${bgFill}" rx="${border_radius}" />
   ${imagePart}
-  <text x="${textX}" y="32" fill="#FFFFFF" font-size="20" font-family="system-ui" font-weight="700">${name}</text>
-  <text x="${textX}" y="56" fill="#B3B3B3" font-size="14" font-family="system-ui">Followers: ${followers}</text>
-  <text x="${textX}" y="78" fill="#B3B3B3" font-size="12" font-family="system-ui">ID: ${sanitizeText(
-    profile?.id || "",
-    40
-  )}</text>
+  <text x="${textX}" y="32" fill="${text_color}" font-size="20" font-family="system-ui" font-weight="700">${name}</text>
+  ${followersPart}
+  ${idPart}
   ${topArtistPart}
 </svg>`;
 }

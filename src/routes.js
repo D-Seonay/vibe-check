@@ -294,7 +294,21 @@ export function createRouter(config) {
   // NEW: /api/profile
   router.get('/api/profile', async (req, res) => {
     try {
-      const jwt = req.query.jwt;
+      const {
+        jwt,
+        bg_color = '121212',
+        text_color = 'FFFFFF',
+        subtext_color = 'B3B3B3',
+        title_color = 'FFFFFF',
+        show_id = 'true',
+        show_followers = 'true',
+        show_top_artist = 'true',
+        gradient_bg = 'false',
+        gradient_start_color = '444444',
+        gradient_end_color = '121212',
+        border_radius = '8',
+      } = req.query;
+
       if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
       if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
 
@@ -316,16 +330,32 @@ export function createRouter(config) {
         imageAsB64 = imageBuffer.toString('base64');
       }
 
-      const topArtistData = await getTopArtists(accessToken, { timeRange: 'short_term', limit: 1 });
-      const topArtist = topArtistData?.items?.[0];
+      let topArtist = null;
       let topArtistImageB64 = null;
-      if(topArtist && topArtist.images.length > 0) {
-        const imageUrl = topArtist.images[0].url;
-        const imageBuffer = await import('./http.js').then(({ getBuffer }) => getBuffer(imageUrl));
-        topArtistImageB64 = imageBuffer.toString('base64');
+      if (show_top_artist === 'true') {
+        const topArtistData = await getTopArtists(accessToken, { timeRange: 'short_term', limit: 1 });
+        topArtist = topArtistData?.items?.[0];
+        if(topArtist && topArtist.images.length > 0) {
+          const imageUrl = topArtist.images[0].url;
+          const imageBuffer = await import('./http.js').then(({ getBuffer }) => getBuffer(imageUrl));
+          topArtistImageB64 = imageBuffer.toString('base64');
+        }
       }
+      
+      const options = {
+        bg_color: `#${bg_color}`,
+        text_color: `#${text_color}`,
+        subtext_color: `#${subtext_color}`,
+        title_color: `#${title_color}`,
+        show_id: show_id === 'true',
+        show_followers: show_followers === 'true',
+        gradient_bg: gradient_bg === 'true',
+        gradient_start_color: `#${gradient_start_color}`,
+        gradient_end_color: `#${gradient_end_color}`,
+        border_radius: Number(border_radius),
+      };
 
-      const svg = renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB64);
+      const svg = renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB64, options);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);
@@ -333,7 +363,7 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderProfileSVG(null, null, null, null));
+      res.status(200).send(renderProfileSVG(null, null, null, null, {}));
     }
   });
 
