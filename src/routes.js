@@ -308,8 +308,15 @@ export function createRouter(config) {
       });
 
       const profile = await getMe(accessToken);
+      
+      let imageAsB64 = null;
+      if(profile.images.length > 0) {
+        const imageUrl = profile.images[0].url;
+        const imageBuffer = await import('./http.js').then(({ getBuffer }) => getBuffer(imageUrl));
+        imageAsB64 = imageBuffer.toString('base64');
+      }
 
-      const svg = renderProfileSVG(profile);
+      const svg = renderProfileSVG(profile, imageAsB64);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);

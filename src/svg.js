@@ -200,19 +200,35 @@ export function renderCurrentStatusSVG(nowPlaying) {
 }
 
 // NEW: Profile card
-export function renderProfileSVG(profile) {
+export function renderProfileSVG(profile, imageAsB64) {
   const width = 540;
   const height = 100;
   const name = sanitizeText(profile?.display_name || "Utilisateur Spotify", 60);
   const followers = profile?.followers?.total ?? 0;
+  const hasImage = imageAsB64 !== null;
+
+  let imagePart = '';
+  if (hasImage) {
+    imagePart = `
+    <defs>
+      <clipPath id="clipCircle">
+        <circle cx="50" cy="50" r="40" />
+      </clipPath>
+    </defs>
+    <image x="10" y="10" width="80" height="80" href="data:image/jpeg;base64,${imageAsB64}" clip-path="url(#clipCircle)" />
+    `;
+  }
+
+  const textX = hasImage ? 110 : 16;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Profile">
   <title>Spotify Profile</title>
   <rect x="0" y="0" width="${width}" height="${height}" fill="#121212" rx="8" />
-  <text x="16" y="32" fill="#FFFFFF" font-size="20" font-family="system-ui" font-weight="700">${name}</text>
-  <text x="16" y="56" fill="#B3B3B3" font-size="14" font-family="system-ui">Followers: ${followers}</text>
-  <text x="16" y="78" fill="#B3B3B3" font-size="12" font-family="system-ui">ID: ${sanitizeText(
+  ${imagePart}
+  <text x="${textX}" y="32" fill="#FFFFFF" font-size="20" font-family="system-ui" font-weight="700">${name}</text>
+  <text x="${textX}" y="56" fill="#B3B3B3" font-size="14" font-family="system-ui">Followers: ${followers}</text>
+  <text x="${textX}" y="78" fill="#B3B3B3" font-size="12" font-family="system-ui">ID: ${sanitizeText(
     profile?.id || "",
     40
   )}</text>
