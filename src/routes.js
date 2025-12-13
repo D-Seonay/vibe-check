@@ -316,7 +316,16 @@ export function createRouter(config) {
         imageAsB64 = imageBuffer.toString('base64');
       }
 
-      const svg = renderProfileSVG(profile, imageAsB64);
+      const topArtistData = await getTopArtists(accessToken, { timeRange: 'short_term', limit: 1 });
+      const topArtist = topArtistData?.items?.[0];
+      let topArtistImageB64 = null;
+      if(topArtist && topArtist.images.length > 0) {
+        const imageUrl = topArtist.images[0].url;
+        const imageBuffer = await import('./http.js').then(({ getBuffer }) => getBuffer(imageUrl));
+        topArtistImageB64 = imageBuffer.toString('base64');
+      }
+
+      const svg = renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB64);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);
@@ -324,7 +333,7 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderProfileSVG(null));
+      res.status(200).send(renderProfileSVG(null, null, null, null));
     }
   });
 

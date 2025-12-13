@@ -200,9 +200,9 @@ export function renderCurrentStatusSVG(nowPlaying) {
 }
 
 // NEW: Profile card
-export function renderProfileSVG(profile, imageAsB64) {
+export function renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB64) {
   const width = 540;
-  const height = 100;
+  const height = 200;
   const name = sanitizeText(profile?.display_name || "Utilisateur Spotify", 60);
   const followers = profile?.followers?.total ?? 0;
   const hasImage = imageAsB64 !== null;
@@ -221,6 +221,29 @@ export function renderProfileSVG(profile, imageAsB64) {
 
   const textX = hasImage ? 110 : 16;
 
+  let topArtistPart = '';
+  if (topArtist) {
+    const artistName = sanitizeText(topArtist.name, 40);
+    const hasArtistImage = topArtistImageB64 !== null;
+    let artistImagePart = '';
+    if (hasArtistImage) {
+      artistImagePart = `
+      <defs>
+        <clipPath id="clipCircleArtist">
+          <circle cx="330" cy="50" r="40" />
+        </clipPath>
+      </defs>
+      <image x="290" y="10" width="80" height="80" href="data:image/jpeg;base64,${topArtistImageB64}" clip-path="url(#clipCircleArtist)" />
+      `;
+    }
+    topArtistPart = `
+      ${artistImagePart}
+      <text x="16" y="130" fill="#FFFFFF" font-size="16" font-family="system-ui" font-weight="600">Top 1 Artiste (ce mois)</text>
+      <text x="16" y="155" fill="#B3B3B3" font-size="14" font-family="system-ui">${artistName}</text>
+      <text x="16" y="175" fill="#B3B3B3" font-size="12" font-family="system-ui" font-style="italic">Temps d'écoute non disponible via l'API</text>
+    `;
+  }
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Profile">
   <title>Spotify Profile</title>
@@ -232,5 +255,6 @@ export function renderProfileSVG(profile, imageAsB64) {
     profile?.id || "",
     40
   )}</text>
+  ${topArtistPart}
 </svg>`;
 }
