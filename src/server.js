@@ -28,9 +28,9 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !JWT_SECRET) {
 }
 
 
-app.get('/api-docs', (req, res) => {
-  res.redirect('/api-docs/');
-});
+// app.get('/api-docs', (req, res) => {
+//   res.redirect('/api-docs/');
+// });
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // -----------------------
