@@ -2,10 +2,10 @@
   "name": "spotify-svg-server",
   "version": "1.0.0",
   "type": "module",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "NODE_ENV=development node server.js",
+    "start": "node src/server.js",
+    "dev": "NODE_ENV=development node src/server.js",
     "test": "jest --env=node --runInBand",
     "test:watch": "jest --watch"
   },

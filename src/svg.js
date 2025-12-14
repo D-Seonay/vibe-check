@@ -1,7 +1,13 @@
 import ejs from 'ejs';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url'; // Added for ES Module compatibility
 import { sanitizeText } from './utils.js';
+
+// --- Fix for __dirname in ES Modules ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// ---------------------------------------
 
 const profileTemplate = fs.readFileSync(path.resolve(__dirname, 'profile.ejs'), 'utf8');
 
@@ -57,9 +63,7 @@ export function renderTopTracksSVG(items) {
   const count = Math.min(items?.length || 0, 10);
   const height = padding * 2 + lineHeight * (count + 1);
 
-  const bg = "#121212";
   const fg = "#FFFFFF";
-  const sub = "#B3B3B3";
 
   let lines = "";
   for (let i = 0; i < count; i++) {
@@ -69,10 +73,9 @@ export function renderTopTracksSVG(items) {
     const y = padding + lineHeight * (i + 2);
     lines += `
   <text x="${padding}" y="${y}" fill="#B3B3B3" font-size="14" font-family="system-ui">
-    ${i + 1}. ${name} — ${artist}${playedAt ? " • " + sanitizeText(playedAt, 40) : ""}
+    ${i + 1}. ${name} — ${artist}
   </text>
 `;
-
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -88,9 +91,7 @@ export function renderRecentTracksSVG(items) {
   const width = 540;
   const padding = 16;
   const lineHeight = 22;
-
   const count = Math.min(items?.length || 0, 50);
-
   const height = padding * 2 + lineHeight * (count + 1);
 
   let lines = "";
@@ -117,14 +118,11 @@ export function renderRecentTracksSVG(items) {
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"
   xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Recently Played">
   <title>Spotify Recently Played</title>
-
   <rect x="0" y="0" width="${width}" height="${height}" fill="#121212" rx="8" />
-
   <text x="${padding}" y="${padding + 16}" fill="#FFFFFF"
     font-size="18" font-family="system-ui" font-weight="600">
     Titres récemment écoutés
   </text>
-
   ${lines}
 </svg>`;
 }
@@ -212,7 +210,6 @@ export function renderProfileSVG(profile, imageAsB64, topArtists, options = {}) 
     ...artist,
     name: sanitizeText(artist.name, 40),
   }));
-
 
   return ejs.render(profileTemplate, {
     width,
