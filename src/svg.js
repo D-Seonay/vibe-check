@@ -180,7 +180,7 @@ export function renderCurrentStatusSVG(nowPlaying) {
 </svg>`;
 }
 
-export function renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB64, options = {}) {
+export function renderProfileSVG(profile, imageAsB64, topArtists, options = {}) {
   const {
     bg_color = '#121212',
     text_color = '#FFFFFF',
@@ -195,7 +195,7 @@ export function renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB
   } = options;
 
   const width = 540;
-  const height = topArtist ? 200 : 100;
+  const height = topArtists.length > 0 ? 300 : 100;
   const name = sanitizeText(profile?.display_name || "Utilisateur Spotify", 60);
   const followers = profile?.followers?.total ?? 0;
   const hasImage = imageAsB64 !== null;
@@ -207,8 +207,11 @@ export function renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB
 
   const textX = hasImage ? 110 : 16;
   const profileId = sanitizeText(profile?.id || "", 40);
-  const artistName = topArtist ? sanitizeText(topArtist.name, 40) : '';
-  const hasArtistImage = topArtistImageB64 !== null;
+
+  const artists = topArtists.map(artist => ({
+    ...artist,
+    name: sanitizeText(artist.name, 40),
+  }));
 
 
   return ejs.render(profileTemplate, {
@@ -229,10 +232,7 @@ export function renderProfileSVG(profile, imageAsB64, topArtist, topArtistImageB
     followers,
     show_id,
     profileId,
-    topArtist,
-    hasArtistImage,
-    topArtistImageB64,
+    topArtists: artists,
     title_color,
-    artistName,
   });
 }
