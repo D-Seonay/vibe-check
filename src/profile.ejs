@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="<%= width %>" height="<%= height %>" viewBox="0 0 <%= width %> <%= height %>" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Profile">
   <title>Spotify Profile</title>
+  
   <% if (gradient_bg) { %>
     <defs>
       <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -10,6 +11,7 @@
     </defs>
   <% } %>
   <rect x="0" y="0" width="<%= width %>" height="<%= height %>" fill="<%= bgFill %>" rx="<%= border_radius %>" />
+
   <% if (hasImage) { %>
     <defs>
       <clipPath id="clipCircle">
@@ -18,26 +20,48 @@
     </defs>
     <image x="10" y="10" width="80" height="80" href="data:image/jpeg;base64,<%= imageAsB64 %>" clip-path="url(#clipCircle)" />
   <% } %>
-  <text x="<%= textX %>" y="32" fill="<%= text_color %>" font-size="20" font-family="system-ui" font-weight="700"><%= name %></text>
+
+  <text x="<%= textX %>" y="35" fill="<%= text_color %>" font-size="20" font-family="system-ui, sans-serif" font-weight="700"><%= name %></text>
+  
   <% if (show_followers) { %>
-    <text x="<%= textX %>" y="56" fill="<%= subtext_color %>" font-size="14" font-family="system-ui">Followers: <%= followers %></text>
+    <text x="<%= textX %>" y="60" fill="<%= subtext_color %>" font-size="14" font-family="system-ui, sans-serif">Followers: <%= followers %></text>
   <% } %>
+  
   <% if (show_id) { %>
-    <text x="<%= textX %>" y="78" fill="<%= subtext_color %>" font-size="12" font-family="system-ui">ID: <%= profileId %></text>
+    <text x="<%= textX %>" y="80" fill="<%= subtext_color %>" font-size="12" font-family="system-ui, sans-serif">ID: <%= profileId %></text>
   <% } %>
+
   <% if (topArtists.length > 0) { %>
-    <text x="16" y="130" fill="<%= title_color %>" font-size="16" font-family="system-ui" font-weight="600">Top 3 Artistes (ce mois)</text>
-    <% topArtists.forEach((artist, index) => { %>
+    <text x="16" y="125" fill="<%= title_color %>" font-size="16" font-family="system-ui, sans-serif" font-weight="600">Top 3 Artistes (ce mois)</text>
+
+    <% topArtists.forEach((artist, index) => { 
+        // Configuration de la grille
+        const startY = 145;      // Position de départ verticalement
+        const rowHeight = 50;    // Hauteur de chaque ligne
+        const imgSize = 40;      // Taille de l'image (carré)
+        const currentY = startY + (index * rowHeight);
+        const textY = currentY + 25; // Centré verticalement par rapport à l'image
+    %>
+      
       <% if (artist.imageB64) { %>
         <defs>
-          <clipPath id="clipCircleArtist<%= index %>">
-            <circle cx="<%= 200 + index * 100 %>" cy="50" r="30" />
+          <clipPath id="clipArtist<%= index %>">
+            <circle cx="<%= 36 %>" cy="<%= currentY + 20 %>" r="20" />
           </clipPath>
         </defs>
-        <image x="<%= 170 + index * 100 %>" y="20" width="60" height="60" href="data:image/jpeg;base64,<%= artist.imageB64 %>" clip-path="url(#clipCircleArtist<%= index %>)" />
+        <image x="16" y="<%= currentY %>" width="<%= imgSize %>" height="<%= imgSize %>" 
+               href="data:image/jpeg;base64,<%= artist.imageB64 %>" 
+               clip-path="url(#clipArtist<%= index %>)" />
       <% } %>
-      <text x="16" y="<%= 155 + index * 25 %>" fill="<%= subtext_color %>" font-size="14" font-family="system-ui"><%= index + 1 %>. <%= artist.name %></text>
+
+      <text x="70" y="<%= textY %>" fill="<%= subtext_color %>" font-size="14" font-family="system-ui, sans-serif" font-weight="500">
+        <%= index + 1 %>. <%= artist.name %>
+      </text>
+
     <% }) %>
-    <text x="16" y="230" fill="<%= subtext_color %>" font-size="12" font-family="system-ui" font-style="italic">Temps d'écoute non disponible via l'API</text>
+
+    <text x="16" y="<%= 145 + (topArtists.length * 50) + 20 %>" fill="<%= subtext_color %>" font-size="10" font-family="system-ui, sans-serif" opacity="0.7">
+      Généré via Spotify API
+    </text>
   <% } %>
 </svg>
