@@ -7,7 +7,8 @@
     "start": "node src/server.js",
     "dev": "NODE_ENV=development node src/server.js",
     "test": "jest --env=node --runInBand",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "build": ":"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
