@@ -36,7 +36,16 @@ export function createRouter(config) {
   const router = express.Router();
   const rateLimit = createRateLimiter(RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX);
 
-  // /connect
+  /**
+   * @swagger
+   * /connect:
+   *   get:
+   *     summary: Connect to Spotify
+   *     description: Redirects to Spotify to authorize the application.
+   *     responses:
+   *       302:
+   *         description: Redirects to Spotify authorization page.
+   */
   router.get('/connect', (req, res) => {
     const state = crypto.randomBytes(16).toString('hex');
     const scope = [
@@ -70,7 +79,25 @@ export function createRouter(config) {
     res.send(html);
   });
 
-  // /callback
+  /**
+   * @swagger
+   * /callback:
+   *   get:
+   *     summary: Spotify callback
+   *     description: Handles the callback from Spotify after authorization.
+   *     parameters:
+   *       - in: query
+   *         name: code
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: The authorization code from Spotify.
+   *     responses:
+   *       200:
+   *         description: Shows the generated JWT and markdown snippets.
+   *       400:
+   *         description: Missing or invalid authorization code.
+   */
   router.get('/callback', async (req, res) => {
     const code = req.query.code;
     if (!code || typeof code !== 'string') {
@@ -131,7 +158,27 @@ export function createRouter(config) {
     }
   });
 
-  // /api/now-playing
+  /**
+   * @swagger
+   * /api/now-playing:
+   *   get:
+   *     summary: Get currently playing song as an SVG.
+   *     parameters:
+   *       - in: query
+   *         name: jwt
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: The JWT token.
+   *     responses:
+   *       200:
+   *         description: An SVG image of the currently playing song.
+   *         content:
+   *           image/svg+xml:
+   *             schema:
+   *               type: string
+   *               format: binary
+   */
   router.get('/api/now-playing', async (req, res) => {
     try {
       const jwt = req.query.jwt;
@@ -161,7 +208,35 @@ export function createRouter(config) {
     }
   });
 
-  // /api/top-tracks
+  /**
+   * @swagger
+   * /api/top-tracks:
+   *   get:
+   *     summary: Get top tracks as an SVG.
+   *     parameters:
+   *       - in: query
+   *         name: jwt
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: The JWT token.
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 10
+   *         default: 5
+   *         description: The number of tracks to display.
+   *     responses:
+   *       200:
+   *         description: An SVG image of the top tracks.
+   *         content:
+   *           image/svg+xml:
+   *             schema:
+   *               type: string
+   *               format: binary
+   */
   router.get('/api/top-tracks', async (req, res) => {
     try {
       const jwt = req.query.jwt;
@@ -192,7 +267,35 @@ export function createRouter(config) {
     }
   });
 
-  // NEW: /api/recent-tracks
+  /**
+   * @swagger
+   * /api/recent-tracks:
+   *   get:
+   *     summary: Get recently played tracks as an SVG.
+   *     parameters:
+   *       - in: query
+   *         name: jwt
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: The JWT token.
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 50
+   *         default: 10
+   *         description: The number of tracks to display.
+   *     responses:
+   *       200:
+   *         description: An SVG image of recently played tracks.
+   *         content:
+   *           image/svg+xml:
+   *             schema:
+   *               type: string
+   *               format: binary
+   */
   router.get('/api/recent-tracks', async (req, res) => {
     try {
       const jwt = req.query.jwt;
@@ -224,7 +327,42 @@ export function createRouter(config) {
     }
   });
 
-  // NEW: /api/top-artists
+  /**
+   * @swagger
+   * /api/top-artists:
+   *   get:
+   *     summary: Get top artists as an SVG.
+   *     parameters:
+   *       - in: query
+   *         name: jwt
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: The JWT token.
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 10
+   *         default: 5
+   *         description: The number of artists to display.
+   *       - in: query
+   *         name: time_range
+   *         schema:
+   *           type: string
+   *           enum: [short_term, medium_term, long_term]
+   *         default: short_term
+   *         description: The time range for the top artists.
+   *     responses:
+   *       200:
+   *         description: An SVG image of top artists.
+   *         content:
+   *           image/svg+xml:
+   *             schema:
+   *               type: string
+   *               format: binary
+   */
   router.get('/api/top-artists', async (req, res) => {
     try {
       const jwt = req.query.jwt;
@@ -261,7 +399,27 @@ export function createRouter(config) {
     }
   });
 
-  // NEW: /api/current-status
+  /**
+   * @swagger
+   * /api/current-status:
+   *   get:
+   *     summary: Get current Spotify status as an SVG.
+   *     parameters:
+   *       - in: query
+   *         name: jwt
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: The JWT token.
+   *     responses:
+   *       200:
+   *         description: An SVG image of the current Spotify status.
+   *         content:
+   *           image/svg+xml:
+   *             schema:
+   *               type: string
+   *               format: binary
+   */
   router.get('/api/current-status', async (req, res) => {
     try {
       const jwt = req.query.jwt;
@@ -291,7 +449,93 @@ export function createRouter(config) {
     }
   });
 
-  // NEW: /api/profile
+  /**
+   * @swagger
+   * /api/profile:
+   *   get:
+   *     summary: Get user profile as an SVG.
+   *     parameters:
+   *       - in: query
+   *         name: jwt
+   *         schema:
+   *           type: string
+   *         required: true
+   *         description: The JWT token.
+   *       - in: query
+   *         name: bg_color
+   *         schema:
+   *           type: string
+   *         default: "121212"
+   *         description: Background color (hex without #).
+   *       - in: query
+   *         name: text_color
+   *         schema:
+   *           type: string
+   *         default: "FFFFFF"
+   *         description: Text color (hex without #).
+   *       - in: query
+   *         name: subtext_color
+   *         schema:
+   *           type: string
+   *         default: "B3B3B3"
+   *         description: Subtext color (hex without #).
+   *       - in: query
+   *         name: title_color
+   *         schema:
+   *           type: string
+   *         default: "FFFFFF"
+   *         description: Title color (hex without #).
+   *       - in: query
+   *         name: show_id
+   *         schema:
+   *           type: boolean
+   *         default: false
+   *         description: Show Spotify user ID.
+   *       - in: query
+   *         name: show_followers
+   *         schema:
+   *           type: boolean
+   *         default: true
+   *         description: Show follower count.
+   *       - in: query
+   *         name: show_top_artist
+   *         schema:
+   *           type: boolean
+   *         default: true
+   *         description: Show top artist.
+   *       - in: query
+   *         name: gradient_bg
+   *         schema:
+   *           type: boolean
+   *         default: false
+   *         description: Use a gradient background.
+   *       - in: query
+   *         name: gradient_start_color
+   *         schema:
+   *           type: string
+   *         default: "444444"
+   *         description: Gradient start color (hex without #).
+   *       - in: query
+   *         name: gradient_end_color
+   *         schema:
+   *           type: string
+   *         default: "121212"
+   *         description: Gradient end color (hex without #).
+   *       - in: query
+   *         name: border_radius
+   *         schema:
+   *           type: integer
+   *         default: 8
+   *         description: Border radius of the SVG.
+   *     responses:
+   *       200:
+   *         description: An SVG image of the user profile.
+   *         content:
+   *           image/svg+xml:
+   *             schema:
+   *               type: string
+   *               format: binary
+   */
   router.get('/api/profile', async (req, res) => {
     try {
       const {

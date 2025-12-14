@@ -1,6 +1,8 @@
 // src/server.js
 import express from 'express';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './swagger.js';
 import { createRouter } from './routes.js';
 
 dotenv.config();
@@ -23,6 +25,8 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !JWT_SECRET) {
   console.error('Env manquantes: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, JWT_SECRET');
   process.exit(1);
 }
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(
   createRouter({
