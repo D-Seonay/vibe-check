@@ -7,6 +7,7 @@ import { createRouter } from './routes.js';
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 
 const {
   SPOTIFY_CLIENT_ID: CLIENT_ID,
