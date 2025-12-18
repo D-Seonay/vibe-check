@@ -547,6 +547,7 @@ export function createRouter(config) {
         show_id = 'false',
         show_followers = 'true',
         show_top_artist = 'true',
+        show_top_tracks = 'true', // Ajout du paramètre pour les top tracks
         gradient_bg = 'false',
         gradient_start_color = '444444',
         gradient_end_color = '121212',
@@ -589,6 +590,22 @@ export function createRouter(config) {
           }));
         }
       }
+
+      let topTracks = [];
+      if (show_top_tracks === 'true') {
+        const topTracksData = await getTopTracks(accessToken, { timeRange: 'short_term', limit: 5 });
+        if (topTracksData?.items) {
+          topTracks = await Promise.all(topTracksData.items.map(async (track) => {
+            let imageB64 = null;
+            if (track.album.images.length > 0) {
+              const imageUrl = track.album.images[0].url;
+              const imageBuffer = await import('./http.js').then(({ getBuffer }) => getBuffer(imageUrl));
+              imageB64 = imageBuffer.toString('base64');
+            }
+            return { ...track, imageB64 };
+          }));
+        }
+      }
       
       const options = {
         bg_color: `#${bg_color}`,
@@ -603,7 +620,7 @@ export function createRouter(config) {
         border_radius: Number(border_radius),
       };
 
-      const svg = renderProfileSVG(profile, imageAsB64, topArtists, options);
+      const svg = renderProfileSVG(profile, imageAsB64, topArtists, topTracks, options);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);
@@ -611,7 +628,7 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderProfileSVG(null, null, [], {}));
+      res.status(200).send(renderProfileSVG(null, null, [], [], {}));
     }
   });
 

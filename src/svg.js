@@ -178,7 +178,7 @@ export function renderCurrentStatusSVG(nowPlaying) {
 </svg>`;
 }
 
-export function renderProfileSVG(profile, imageAsB64, topArtists, options = {}) {
+export function renderProfileSVG(profile, imageAsB64, topArtists, topTracks, options = {}) {
   const {
     bg_color = '#121212',
     text_color = '#FFFFFF',
@@ -193,7 +193,10 @@ export function renderProfileSVG(profile, imageAsB64, topArtists, options = {}) 
   } = options;
 
   const width = 540;
-  const height = topArtists.length > 0 ? 300 : 100;
+  let height = 100;
+  if(topArtists.length > 0) height = 300;
+  if(topTracks.length > 0) height = 480;
+
   const name = sanitizeText(profile?.display_name || "Utilisateur Spotify", 60);
   const followers = profile?.followers?.total ?? 0;
   const hasImage = imageAsB64 !== null;
@@ -209,6 +212,12 @@ export function renderProfileSVG(profile, imageAsB64, topArtists, options = {}) 
   const artists = topArtists.map(artist => ({
     ...artist,
     name: sanitizeText(artist.name, 40),
+  }));
+
+  const tracks = topTracks.map(track => ({
+    ...track,
+    name: sanitizeText(track.name, 40),
+    artist: sanitizeText(track.artists.map(a => a.name).join(', '), 30),
   }));
 
   return ejs.render(profileTemplate, {
@@ -230,6 +239,7 @@ export function renderProfileSVG(profile, imageAsB64, topArtists, options = {}) 
     show_id,
     profileId,
     topArtists: artists,
+    topTracks: tracks,
     title_color,
   });
 }
