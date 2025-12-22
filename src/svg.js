@@ -12,6 +12,7 @@ const __dirname = path.dirname(__filename);
 const profileTemplate = fs.readFileSync(path.resolve(__dirname, 'profile.ejs'), 'utf8');
 const callbackPreviewTemplate = fs.readFileSync(path.resolve(__dirname, 'callback_preview.ejs'), 'utf8');
 const connectTemplate = fs.readFileSync(path.resolve(__dirname, 'connect.ejs'), 'utf8');
+const mosaicTemplate = fs.readFileSync(path.resolve(__dirname, 'mosaic.ejs'), 'utf8');
 
 export function renderNowPlayingSVG(nowPlaying) {
   const width = 540;
@@ -252,4 +253,69 @@ export function renderCallbackPreviewHTML(data) {
 
 export function renderConnectPage(data) {
   return ejs.render(connectTemplate, data);
+}
+
+export function renderListeningMosaicSVG(listeningHistory) {
+  const today = new Date();
+  const yearAgo = new Date(today);
+  yearAgo.setFullYear(today.getFullYear() - 1);
+
+  const days = new Array(365).fill(0);
+  const dayCounts = {};
+
+  for (const item of listeningHistory) {
+    const playedAt = new Date(item.played_at);
+    if (playedAt >= yearAgo) {
+      const dayOfYear = Math.floor((playedAt - new Date(playedAt.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+      const dateString = playedAt.toISOString().split('T')[0];
+      dayCounts[dateString] = (dayCounts[dateString] || 0) + 1;
+    }
+  }
+
+  const weeks = Array.from({ length: 53 }, () => new Array(7).fill(null));
+  const monthLabels = [];
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  let maxCount = 0;
+  for (let i = 0; i < 365; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dateString = date.toISOString().split('T')[0];
+    const count = dayCounts[dateString] || 0;
+    if (count > maxCount) maxCount = count;
+  }
+
+  const colorLevels = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
+  const getColor = (count) => {
+    if (count === 0) return colorLevels[0];
+    const level = Math.ceil((count / maxCount) * (colorLevels.length - 2));
+    return colorLevels[level + 1];
+  };
+
+  for (let i = 0; i < 365; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dayOfWeek = (date.getDay() + 6) % 7; // Monday = 0
+    const weekIndex = 52 - Math.floor((today - date) / (1000 * 60 * 60 * 24 * 7));
+
+    if (weeks[weekIndex]) {
+      const count = dayCounts[date.toISOString().split('T')[0]] || 0;
+      weeks[weekIndex][dayOfWeek] = {
+        count,
+        color: getColor(count),
+      };
+    }
+    
+    if (date.getDate() === 1) {
+        monthLabels.push({
+            name: monthNames[date.getMonth()],
+            x: weekIndex * 14
+        });
+    }
+  }
+
+  return ejs.render(mosaicTemplate, {
+    weeks,
+    monthLabels,
+  });
 }

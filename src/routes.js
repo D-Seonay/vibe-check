@@ -12,6 +12,7 @@ import {
   renderProfileSVG,
   renderCallbackPreviewHTML,
   renderConnectPage,
+  renderListeningMosaicSVG,
 } from './svg.js';
 import { createRateLimiter } from './rateLimit.js';
 import {
@@ -21,6 +22,7 @@ import {
   getRecentlyPlayed,
   getTopArtists,
   getMe,
+  getListeningHistory,
 } from './spotify.js';
 
 export function createRouter(config) {
@@ -684,6 +686,35 @@ export function createRouter(config) {
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.status(200).send(renderProfileSVG(null, null, [], [], {}));
+    }
+  });
+
+  router.get('/api/listening-mosaic', async (req, res) => {
+    try {
+      const jwt = req.query.jwt;
+      if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
+      if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
+
+      const payload = verifyJWT(jwt, JWT_SECRET);
+      if (!payload?.rt) return res.status(401).send('JWT invalide ou expiré');
+
+      const accessToken = await refreshAccessToken({
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        refreshToken: payload.rt,
+      });
+
+      const listeningHistory = await getListeningHistory(accessToken, { maxPages: 20 });
+
+      const svg = renderListeningMosaicSVG(listeningHistory);
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.send(svg);
+    } catch (err) {
+      console.error(err);
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.status(200).send(renderListeningMosaicSVG([]));
     }
   });
 

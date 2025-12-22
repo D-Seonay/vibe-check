@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="722" height="112" viewBox="0 0 722 112" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Listening Mosaic">
+  <title>Spotify Listening Mosaic</title>
+  <style>
+    .day {
+      width: 10px;
+      height: 10px;
+      rx: 2;
+      ry: 2;
+      fill: #ebedf0;
+    }
+    .month {
+      font-size: 10px;
+      font-family: system-ui, sans-serif;
+      fill: #767676;
+    }
+    .weekday {
+      font-size: 9px;
+      font-family: system-ui, sans-serif;
+      fill: #767676;
+    }
+  </style>
+  <rect x="0" y="0" width="722" height="112" fill="white" />
+  <g transform="translate(20, 20)">
+    <% weeks.forEach((week, weekIndex) => { %>
+      <g transform="translate(<%= weekIndex * 14 %>, 0)">
+        <% week.forEach((day, dayIndex) => { %>
+          <% if (day) { %>
+            <rect class="day" y="<%= dayIndex * 13 %>" data-count="<%= day.count %>" fill="<%= day.color %>" />
+          <% } %>
+        <% }) %>
+      </g>
+    <% }) %>
+
+    <% monthLabels.forEach(label => { %>
+      <text class="month" x="<%= label.x %>" y="-8"><%= label.name %></text>
+    <% }) %>
+
+    <text class="weekday" dx="-12" dy="10">M</text>
+    <text class="weekday" dx="-12" dy="36">W</text>
+    <text class="weekday" dx="-12" dy="62">F</text>
+  </g>
+</svg>
