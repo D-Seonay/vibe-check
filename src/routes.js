@@ -129,6 +129,7 @@ export function createRouter(config) {
       const mdTopArtists = `![Spotify Top Artists](https://${host}/api/top-artists?jwt=${encodeURIComponent(jwt)}&limit=10&time_range=short_term)`;
       const mdStatus = `![Spotify Status](https://${host}/api/current-status?jwt=${encodeURIComponent(jwt)})`;
       const mdProfile = `![Spotify Profile](https://${host}/api/profile?jwt=${encodeURIComponent(jwt)})`;
+      const mdMosaic = `![Spotify Listening Mosaic](https://${host}/api/listening-mosaic?jwt=${encodeURIComponent(jwt)})`;
 
       // --- New logic for preview ---
       const payload = verifyJWT(jwt, JWT_SECRET); // Verify the JWT just generated to get payload.rt for subsequent calls
@@ -186,6 +187,8 @@ export function createRouter(config) {
       const topArtistsSvg = renderTopArtistsSVG(topArtistsData?.items || []);
       const currentStatusSvg = renderCurrentStatusSVG(nowPlayingData);
       const profileSvg = renderProfileSVG(profileData, profileImageAsB64, profileTopArtists, profileTopTracks, {}); // Default options for preview
+      const listeningHistory = await getListeningHistory(accessToken);
+      const listeningMosaicSvg = renderListeningMosaicSVG(listeningHistory);
 
       // Render the new preview HTML
       const html = renderCallbackPreviewHTML({
@@ -196,12 +199,14 @@ export function createRouter(config) {
         mdTopArtists,
         mdStatus,
         mdProfile,
+        mdMosaic,
         nowPlayingSvg,
         topTracksSvg,
         recentTracksSvg,
         topArtistsSvg,
         currentStatusSvg,
         profileSvg,
+        listeningMosaicSvg,
         jwtExpiresIn: JWT_EXPIRES_IN,
         host, // Pass the host to the template
       });
