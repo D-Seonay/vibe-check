@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 
 const profileTemplate = fs.readFileSync(path.resolve(__dirname, 'profile.ejs'), 'utf8');
 const callbackPreviewTemplate = fs.readFileSync(path.resolve(__dirname, 'callback_preview.ejs'), 'utf8');
+const connectTemplate = fs.readFileSync(path.resolve(__dirname, 'connect.ejs'), 'utf8');
 
 export function renderNowPlayingSVG(nowPlaying) {
   const width = 540;
@@ -247,4 +248,8 @@ export function renderProfileSVG(profile, imageAsB64, topArtists, topTracks, opt
 
 export function renderCallbackPreviewHTML(data) {
   return ejs.render(callbackPreviewTemplate, data);
+}
+
+export function renderConnectPage(data) {
+  return ejs.render(connectTemplate, data);
 }

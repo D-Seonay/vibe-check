@@ -11,6 +11,7 @@ import {
   renderCurrentStatusSVG,
   renderProfileSVG,
   renderCallbackPreviewHTML,
+  renderConnectPage,
 } from './svg.js';
 import { createRateLimiter } from './rateLimit.js';
 import {
@@ -67,15 +68,7 @@ export function createRouter(config) {
     });
 
     const authUrl = `https://accounts.spotify.com/authorize?${params}`;
-    const html = `<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Connecter Spotify</title></head>
-<body style="font-family: system-ui; padding: 24px;">
-  <h1>Connecter ton Spotify</h1>
-  <p>Tu vas être redirigé vers Spotify pour autoriser l’accès aux informations de lecture, tops, dernières écoutes et profil.</p>
-  <a href="${authUrl}" style="display:inline-block;padding:12px 16px;background:#1DB954;color:#fff;text-decoration:none;border-radius:6px;">Autoriser avec Spotify</a>
-</body>
-</html>`;
+    const html = renderConnectPage({ authUrl });
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
   });

@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Connecter Spotify</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121212;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 500px;
+            padding: 40px;
+            background-color: #181818;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #1DB954;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .spotify-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #1DB954;
+            color: #FFFFFF;
+            font-size: 1.2em;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 500px;
+            transition: background-color 0.3s ease;
+        }
+        .spotify-btn:hover {
+            background-color: #1ED760;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Connecter votre compte Spotify</h1>
+        <p>Pour générer vos widgets personnalisés, vous devez autoriser notre application à accéder à vos données d'écoute Spotify.</p>
+        <a href="<%= authUrl %>" class="spotify-btn">Autoriser avec Spotify</a>
+    </div>
+</body>
+</html>
