@@ -203,6 +203,7 @@ export function createRouter(config) {
         currentStatusSvg,
         profileSvg,
         jwtExpiresIn: JWT_EXPIRES_IN,
+        host, // Pass the host to the template
       });
 
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
