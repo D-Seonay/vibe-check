@@ -10,6 +10,7 @@ import {
   renderTopArtistsSVG,
   renderCurrentStatusSVG,
   renderProfileSVG,
+  renderCallbackPreviewHTML,
 } from './svg.js';
 import { createRateLimiter } from './rateLimit.js';
 import {
@@ -134,24 +135,85 @@ export function createRouter(config) {
       const mdStatus = `![Spotify Status](https://${host}/api/current-status?jwt=${encodeURIComponent(jwt)})`;
       const mdProfile = `![Spotify Profile](https://${host}/api/profile?jwt=${encodeURIComponent(jwt)})`;
 
-      const html = `<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Token généré</title></head>
-<body style="font-family: system-ui; padding: 24px;">
-  <h1>Token généré ✅</h1>
-  <p>Copie les lignes Markdown ci-dessous dans ton README.md:</p>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdNow}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdTopTracks}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdRecent}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdTopArtists}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdStatus}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdProfile}</pre>
-  <p><strong>Important:</strong> Ce JWT expire dans ${JWT_EXPIRES_IN}. Tu pourras revenir sur <a href="/connect">/connect</a> pour régénérer un token.</p>
-</body>
-</html>`;
+      // --- New logic for preview ---
+      const payload = verifyJWT(jwt, JWT_SECRET); // Verify the JWT just generated to get payload.rt for subsequent calls
+
+      const accessToken = await refreshAccessToken({
+        clientId: CLIENT_ID,
+        clientSecret: CLIENT_SECRET,
+        refreshToken: payload.rt,
+      });
+
+      // Fetch data for all widgets
+      const nowPlayingData = await getCurrentlyPlaying(accessToken);
+      const topTracksData = await getTopTracks(accessToken, { timeRange: 'short_term', limit: 10 });
+      const recentTracksData = await getRecentlyPlayed(accessToken, { limit: 10 });
+      const topArtistsData = await getTopArtists(accessToken, { timeRange: 'short_term', limit: 10 });
+      const profileData = await getMe(accessToken);
+
+      let profileImageAsB64 = null;
+      if(profileData?.images?.length > 0) {
+        const imageUrl = profileData.images[0].url;
+        const imageBuffer = await import('./http.js').then(({ getBuffer }) => getBuffer(imageUrl));
+        profileImageAsB64 = imageBuffer.toString('base64');
+      }
+
+      let profileTopArtists = [];
+      if (topArtistsData?.items) {
+        profileTopArtists = await Promise.all(topArtistsData.items.slice(0,3).map(async (artist) => { // Only 3 for profile card
+          let imageB64 = null;
+          if (artist.images.length > 0) {
+            const imageUrl = artist.images[0].url;
+            const imageBuffer = await import('./http.js').then(({ getBuffer }) => getBuffer(imageUrl));
+            imageB64 = imageBuffer.toString('base64');
+          }
+          return { ...artist, imageB64 };
+        }));
+      }
+
+      let profileTopTracks = [];
+      if (topTracksData?.items) {
+        profileTopTracks = await Promise.all(topTracksData.items.slice(0,5).map(async (track) => { // Only 5 for profile card
+          let imageB64 = null;
+          if (track.album.images.length > 0) {
+            const imageUrl = track.album.images[0].url;
+            const imageBuffer = await import('./http.js').then(({ getBuffer }) => getBuffer(imageUrl));
+            imageB64 = imageBuffer.toString('base64');
+          }
+          return { ...track, imageB64 };
+        }));
+      }
+
+      // Generate SVGs
+      const nowPlayingSvg = renderNowPlayingSVG(nowPlayingData);
+      const topTracksSvg = renderTopTracksSVG(topTracksData?.items || []);
+      const recentTracksSvg = renderRecentTracksSVG(recentTracksData?.items || []);
+      const topArtistsSvg = renderTopArtistsSVG(topArtistsData?.items || []);
+      const currentStatusSvg = renderCurrentStatusSVG(nowPlayingData);
+      const profileSvg = renderProfileSVG(profileData, profileImageAsB64, profileTopArtists, profileTopTracks, {}); // Default options for preview
+
+      // Render the new preview HTML
+      const html = renderCallbackPreviewHTML({
+        jwt,
+        mdNow,
+        mdTopTracks,
+        mdRecent,
+        mdTopArtists,
+        mdStatus,
+        mdProfile,
+        nowPlayingSvg,
+        topTracksSvg,
+        recentTracksSvg,
+        topArtistsSvg,
+        currentStatusSvg,
+        profileSvg,
+        jwtExpiresIn: JWT_EXPIRES_IN,
+      });
+
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'no-store');
       res.send(html);
+
     } catch (err) {
       console.error(err);
       res.status(500).send('Erreur lors de l’échange OAuth');
