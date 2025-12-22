@@ -40,7 +40,7 @@ export function createRouter(config) {
 
   /**
    * @swagger
-   * /connect:
+   * /:
    *   get:
    *     summary: Connect to Spotify
    *     description: Redirects to Spotify to authorize the application.
@@ -48,7 +48,7 @@ export function createRouter(config) {
    *       302:
    *         description: Redirects to Spotify authorization page.
    */
-  router.get('/connect', (req, res) => {
+  router.get('/', (req, res) => {
     const state = crypto.randomBytes(16).toString('hex');
     const scope = [
       'user-read-currently-playing',
