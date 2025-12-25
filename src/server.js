@@ -32,7 +32,16 @@ if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !JWT_SECRET) {
 //   res.redirect('/api-docs/');
 // });
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+const swaggerOptions = {
+  customCssUrl: 'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css',
+  customJs: [
+    'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js',
+    'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js'
+  ],
+};
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 // -----------------------
 
 // Montage des routes de l'application
