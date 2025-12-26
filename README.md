@@ -116,6 +116,12 @@ Note: The JWT expires according to `JWT_EXPIRES_IN` (default 30 days). Users can
   - Content-Type: `image/svg+xml`
   - Cache-Control: `no-cache, no-store, must-revalidate`
 
+- GET `/api/profile?jwt=...`
+  - Returns an SVG with user profile information, top artists, and top tracks.
+  - Many optional query parameters for customization (e.g., `bg_color`, `text_color`, `show_followers`, `top_artists_limit`, `gradient_bg`, `border_radius`). Refer to the API documentation or source code for full details.
+  - Content-Type: `image/svg+xml`
+  - Cache-Control: `no-cache, no-store, must-revalidate`
+
 - GET `/api/listening-mosaic?jwt=...`
   - Returns a GitHub-like mosaic of listening activity over the last year.
   - Content-Type: `image/svg+xml`

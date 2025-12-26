@@ -567,6 +567,14 @@ export function createRouter(config) {
    *         default: true
    *         description: Show top artist.
    *       - in: query
+   *         name: top_artists_limit
+   *         schema:
+   *           type: integer
+   *           minimum: 1
+   *           maximum: 10
+   *         default: 3
+   *         description: The number of top artists to display (if show_top_artist is true).
+   *       - in: query
    *         name: gradient_bg
    *         schema:
    *           type: boolean
@@ -611,6 +619,7 @@ export function createRouter(config) {
         show_followers = 'true',
         show_top_artist = 'true',
         show_top_tracks = 'true', // Ajout du paramètre pour les top tracks
+        top_artists_limit = '3',
         gradient_bg = 'false',
         gradient_start_color = '444444',
         gradient_end_color = '121212',
@@ -640,7 +649,8 @@ export function createRouter(config) {
 
       let topArtists = [];
       if (show_top_artist === 'true') {
-        const topArtistsData = await getTopArtists(accessToken, { timeRange: 'short_term', limit: 3 });
+        const limit = Math.max(1, Math.min(10, Number(top_artists_limit)));
+        const topArtistsData = await getTopArtists(accessToken, { timeRange: 'short_term', limit });
         if (topArtistsData?.items) {
           topArtists = await Promise.all(topArtistsData.items.map(async (artist) => {
             let imageB64 = null;
