@@ -1,4 +1,3 @@
-// src/routes.js
 import express from 'express';
 import crypto from 'crypto';
 import querystring from 'querystring';
@@ -119,6 +118,7 @@ export function createRouter(config) {
   <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdTopArtists}</pre>
   <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdStatus}</pre>
   <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdProfile}</pre>
+  <p><strong>Themes:</strong> Ajoute <code>&theme=light</code> à l'URL pour un thème clair.</p>
   <p><strong>Important:</strong> Ce JWT expire dans ${JWT_EXPIRES_IN}. Tu pourras revenir sur <a href="/connect">/connect</a> pour régénérer un token.</p>
 </body>
 </html>`;
@@ -135,6 +135,7 @@ export function createRouter(config) {
   router.get('/api/now-playing', async (req, res) => {
     try {
       const jwt = req.query.jwt;
+      const theme = req.query.theme;
       if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
       if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
 
@@ -149,7 +150,7 @@ export function createRouter(config) {
 
       const nowPlaying = await getCurrentlyPlaying(accessToken);
 
-      const svg = renderNowPlayingSVG(nowPlaying);
+      const svg = renderNowPlayingSVG(nowPlaying, theme);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);
@@ -157,7 +158,7 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderNowPlayingSVG(null));
+      res.status(200).send(renderNowPlayingSVG(null, req.query.theme));
     }
   });
 
@@ -165,6 +166,7 @@ export function createRouter(config) {
   router.get('/api/top-tracks', async (req, res) => {
     try {
       const jwt = req.query.jwt;
+      const theme = req.query.theme;
       const limit = Math.max(1, Math.min(10, Number(req.query.limit || 5)));
       if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
       if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
@@ -180,7 +182,7 @@ export function createRouter(config) {
 
       const top = await getTopTracks(accessToken, { timeRange: 'short_term', limit });
 
-      const svg = renderTopTracksSVG(top?.items || []);
+      const svg = renderTopTracksSVG(top?.items || [], theme);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);
@@ -188,7 +190,7 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderTopTracksSVG([]));
+      res.status(200).send(renderTopTracksSVG([], req.query.theme));
     }
   });
 
@@ -196,6 +198,7 @@ export function createRouter(config) {
   router.get('/api/recent-tracks', async (req, res) => {
     try {
       const jwt = req.query.jwt;
+      const theme = req.query.theme;
       const limit = Math.max(1, Math.min(50, Number(req.query.limit || 10)));
       if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
       if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
@@ -212,7 +215,7 @@ export function createRouter(config) {
       const recent = await getRecentlyPlayed(accessToken, { limit });
       const items = Array.isArray(recent?.items) ? recent.items : [];
 
-      const svg = renderRecentTracksSVG(items);
+      const svg = renderRecentTracksSVG(items, theme);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);
@@ -220,7 +223,7 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderRecentTracksSVG([]));
+      res.status(200).send(renderRecentTracksSVG([], req.query.theme));
     }
   });
 
@@ -228,6 +231,7 @@ export function createRouter(config) {
   router.get('/api/top-artists', async (req, res) => {
     try {
       const jwt = req.query.jwt;
+      const theme = req.query.theme;
       const limit = Math.max(1, Math.min(10, Number(req.query.limit || 5)));
       const timeRangeRaw = String(req.query.time_range || 'short_term');
       const timeRange = ['short_term', 'medium_term', 'long_term'].includes(timeRangeRaw)
@@ -249,7 +253,7 @@ export function createRouter(config) {
       const artists = await getTopArtists(accessToken, { timeRange, limit });
       const items = Array.isArray(artists?.items) ? artists.items : [];
 
-      const svg = renderTopArtistsSVG(items);
+      const svg = renderTopArtistsSVG(items, theme);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);
@@ -257,7 +261,7 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderTopArtistsSVG([]));
+      res.status(200).send(renderTopArtistsSVG([], req.query.theme));
     }
   });
 
@@ -265,6 +269,7 @@ export function createRouter(config) {
   router.get('/api/current-status', async (req, res) => {
     try {
       const jwt = req.query.jwt;
+      const theme = req.query.theme;
       if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
       if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
 
@@ -279,7 +284,7 @@ export function createRouter(config) {
 
       const nowPlaying = await getCurrentlyPlaying(accessToken);
 
-      const svg = renderCurrentStatusSVG(nowPlaying);
+      const svg = renderCurrentStatusSVG(nowPlaying, theme);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);
@@ -287,7 +292,7 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderCurrentStatusSVG(null));
+      res.status(200).send(renderCurrentStatusSVG(null, req.query.theme));
     }
   });
 
@@ -295,6 +300,7 @@ export function createRouter(config) {
   router.get('/api/profile', async (req, res) => {
     try {
       const jwt = req.query.jwt;
+      const theme = req.query.theme;
       if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
       if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
 
@@ -309,7 +315,7 @@ export function createRouter(config) {
 
       const profile = await getMe(accessToken);
 
-      const svg = renderProfileSVG(profile);
+      const svg = renderProfileSVG(profile, theme);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.send(svg);
@@ -317,7 +323,7 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderProfileSVG(null));
+      res.status(200).send(renderProfileSVG(null, req.query.theme));
     }
   });
 
