@@ -1,3 +1,18 @@
+import ejs from 'ejs';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// --- Fix for __dirname in ES Modules ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// ---------------------------------------
+
+const profileTemplate = fs.readFileSync(path.resolve(__dirname, 'profile.ejs'), 'utf8');
+const callbackPreviewTemplate = fs.readFileSync(path.resolve(__dirname, 'callback_preview.ejs'), 'utf8');
+const connectTemplate = fs.readFileSync(path.resolve(__dirname, 'connect.ejs'), 'utf8');
+const mosaicTemplate = fs.readFileSync(path.resolve(__dirname, 'mosaic.ejs'), 'utf8');
+
 function sanitizeText(str, maxLength = 100) {
   return [...String(str)]
     .slice(0, maxLength)
@@ -28,7 +43,7 @@ const THEMES = {
   }
 };
 
-function getTheme(themeName) {
+export function getTheme(themeName) {
   return THEMES[themeName] || THEMES.dark;
 }
 
@@ -200,22 +215,141 @@ export function renderCurrentStatusSVG(nowPlaying, themeName = 'dark') {
 </svg>`;
 }
 
-export function renderProfileSVG(profile, themeName = 'dark') {
-  const { bg, fg, sub } = getTheme(themeName);
+export function renderProfileSVG(profile, imageAsB64, topArtists, topTracks, options = {}) {
+  const {
+    bg_color = '#121212',
+    text_color = '#FFFFFF',
+    subtext_color = '#B3B3B3',
+    title_color = '#FFFFFF',
+    show_id = true,
+    show_followers = true,
+    gradient_bg = false,
+    gradient_start_color = '#444444',
+    gradient_end_color = '#121212',
+    border_radius = 8,
+  } = options;
+
   const width = 540;
-  const height = 100;
+  let height = 100;
+  if(topArtists.length > 0) height = 300;
+  if(topTracks.length > 0) height = 480;
+
   const name = sanitizeText(profile?.display_name || "Utilisateur Spotify", 60);
   const followers = profile?.followers?.total ?? 0;
+  const hasImage = imageAsB64 !== null;
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Profile">
-  <title>Spotify Profile</title>
-  <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
-  <text x="16" y="32" fill="${fg}" font-size="20" font-family="system-ui" font-weight="700">${name}</text>
-  <text x="16" y="56" fill="${sub}" font-size="14" font-family="system-ui">Followers: ${followers}</text>
-  <text x="16" y="78" fill="${sub}" font-size="12" font-family="system-ui">ID: ${sanitizeText(
-    profile?.id || "",
-    40
-  )}</text>
-</svg>`;
+  let bgFill = bg_color;
+  if (gradient_bg) {
+    bgFill = `url(#bgGradient)`;
+  }
+
+  const textX = hasImage ? 110 : 16;
+  const profileId = sanitizeText(profile?.id || "", 40);
+
+  const artists = topArtists.map(artist => ({
+    ...artist,
+    name: sanitizeText(artist.name, 40),
+  }));
+
+  const tracks = topTracks.map(track => ({
+    ...track,
+    name: sanitizeText(track.name, 40),
+    artist: sanitizeText(track.artists.map(a => a.name).join(', '), 30),
+  }));
+
+  return ejs.render(profileTemplate, {
+    width,
+    height,
+    gradient_bg,
+    gradient_start_color,
+    gradient_end_color,
+    bgFill,
+    border_radius,
+    hasImage,
+    imageAsB64,
+    textX,
+    name,
+    text_color,
+    show_followers,
+    subtext_color,
+    followers,
+    show_id,
+    profileId,
+    topArtists: artists,
+    topTracks: tracks,
+    title_color,
+  });
+}
+
+export function renderCallbackPreviewHTML(data) {
+  return ejs.render(callbackPreviewTemplate, data);
+}
+
+export function renderConnectPage(data) {
+  return ejs.render(connectTemplate, data);
+}
+
+export function renderListeningMosaicSVG(listeningHistory) {
+  const today = new Date();
+  const yearAgo = new Date(today);
+  yearAgo.setFullYear(today.getFullYear() - 1);
+
+  const days = new Array(365).fill(0);
+  const dayCounts = {};
+
+  for (const item of listeningHistory) {
+    const playedAt = new Date(item.played_at);
+    if (playedAt >= yearAgo) {
+      const dayOfYear = Math.floor((playedAt - new Date(playedAt.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+      const dateString = playedAt.toISOString().split('T')[0];
+      dayCounts[dateString] = (dayCounts[dateString] || 0) + 1;
+    }
+  }
+
+  const weeks = Array.from({ length: 53 }, () => new Array(7).fill(null));
+  const monthLabels = [];
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  let maxCount = 0;
+  for (let i = 0; i < 365; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dateString = date.toISOString().split('T')[0];
+    const count = dayCounts[dateString] || 0;
+    if (count > maxCount) maxCount = count;
+  }
+
+  const colorLevels = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
+  const getColor = (count) => {
+    if (count === 0) return colorLevels[0];
+    const level = Math.ceil((count / maxCount) * (colorLevels.length - 2));
+    return colorLevels[level + 1];
+  };
+
+  for (let i = 0; i < 365; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    const dayOfWeek = (date.getDay() + 6) % 7; // Monday = 0
+    const weekIndex = 52 - Math.floor((today - date) / (1000 * 60 * 60 * 24 * 7));
+
+    if (weeks[weekIndex]) {
+      const count = dayCounts[date.toISOString().split('T')[0]] || 0;
+      weeks[weekIndex][dayOfWeek] = {
+        count,
+        color: getColor(count),
+      };
+    }
+    
+    if (date.getDate() === 1) {
+        monthLabels.push({
+            name: monthNames[date.getMonth()],
+            x: weekIndex * 14
+        });
+    }
+  }
+
+  return ejs.render(mosaicTemplate, {
+    weeks,
+    monthLabels,
+  });
 }
