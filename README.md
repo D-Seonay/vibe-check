@@ -62,27 +62,27 @@ You can deploy on Vercel, Render, Railway, Fly.io, etc.
 
 1) Visit:
 ```
-https://your-domain.com/connect
+https://your-domain.com/
 ```
 2) Authorize with Spotify when prompted.
-3) After redirect, the page shows ready-to-copy Markdown snippets containing a JWT:
+3) After redirect, the page shows a live preview of your widgets and ready-to-copy Markdown snippets containing a JWT:
 ```
 ![Spotify Now Playing](https://your-domain.com/api/now-playing?jwt=<paste-your-jwt>)
 ![Spotify Top Tracks](https://your-domain.com/api/top-tracks?jwt=<paste-your-jwt>&limit=10)
 ```
 4) Paste one of these lines into your GitHub README.md. Done.
 
-Note: The JWT expires according to `JWT_EXPIRES_IN` (default 30 days). Users can revisit `/connect` to generate a new one.
+Note: The JWT expires according to `JWT_EXPIRES_IN` (default 30 days). Users can revisit `/` to generate a new one.
 
 ---
 
 ## Endpoints
 
-- GET `/connect`
-  - Starts the OAuth flow (shows an “Authorize with Spotify” button).
+- GET `/`
+  - The main entry point to connect to Spotify. Displays a beautiful page to initiate the OAuth flow.
 
 - GET `/callback?code=...`
-  - Spotify callback. Exchanges code for `refresh_token`, returns a web page showing Markdown snippets with a signed JWT.
+  - Spotify callback. Exchanges code for `refresh_token`, returns a web page showing Markdown snippets with a signed JWT *and a live preview of the generated widgets*.
 
 - GET `/api/now-playing?jwt=...`
   - Returns an SVG image with current track and progress bar.
@@ -92,6 +92,38 @@ Note: The JWT expires according to `JWT_EXPIRES_IN` (default 30 days). Users can
 - GET `/api/top-tracks?jwt=...&limit=10`
   - Returns an SVG with top tracks (short_term ~ 4 weeks).
   - `limit`: 1–10
+  - Content-Type: `image/svg+xml`
+  - Cache-Control: `no-cache, no-store, must-revalidate`
+
+- GET `/api/recent-tracks?jwt=...&limit=10`
+  - Returns an SVG with recently played tracks.
+  - `limit`: 1–50
+  - Content-Type: `image/svg+xml`
+  - Cache-Control: `no-cache, no-store, must-revalidate`
+
+- GET `/api/top-artists?jwt=...&limit=10`
+  - Returns an SVG with top artists.
+  - `limit`: 1–10
+  - `time_range`: `short_term` (4 weeks), `medium_term` (6 months), `long_term` (years)
+  - Content-Type: `image/svg+xml`
+  - Cache-Control: `no-cache, no-store, must-revalidate`
+
+- GET `/api/current-status?jwt=...`
+  - Returns an SVG showing current playback status (playing/paused/inactive).
+  - Content-Type: `image/svg+xml`
+  - Cache-Control: `no-cache, no-store, must-revalidate`
+
+  - Content-Type: `image/svg+xml`
+  - Cache-Control: `no-cache, no-store, must-revalidate`
+
+- GET `/api/profile?jwt=...`
+  - Returns an SVG with user profile information, top artists, and top tracks.
+  - Many optional query parameters for customization (e.g., `bg_color`, `text_color`, `show_followers`, `top_artists_limit`, `gradient_bg`, `border_radius`). Refer to the API documentation or source code for full details.
+  - Content-Type: `image/svg+xml`
+  - Cache-Control: `no-cache, no-store, must-revalidate`
+
+- GET `/api/listening-mosaic?jwt=...`
+  - Returns a GitHub-like mosaic of listening activity over the last year.
   - Content-Type: `image/svg+xml`
   - Cache-Control: `no-cache, no-store, must-revalidate`
 

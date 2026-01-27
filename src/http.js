@@ -67,3 +67,34 @@ export function get(url, headers = {}) {
     req.end();
   });
 }
+
+export function getBuffer(url, headers = {}) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    const req = https.request(
+      {
+        method: 'GET',
+        hostname: u.hostname,
+        path: u.pathname + u.search,
+        headers,
+      },
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          if (res.statusCode === 204) {
+            resolve(null);
+            return;
+          }
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(Buffer.concat(chunks));
+          } else {
+            reject(new Error(`GET ${url} ${res.statusCode}`));
+          }
+        });
+      }
+    );
+    req.on('error', reject);
+    req.end();
+  });
+}
