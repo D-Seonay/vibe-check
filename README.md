@@ -1,4 +1,4 @@
-# Spotify Status for README.md
+# VibeCheck Spotify Status for README.md
 
 Generate dynamic Spotify SVG images (Now Playing and Top Tracks) that anyone can embed in their GitHub README.md using a single URL. Users connect their Spotify once, get a secure JWT, and paste the provided Markdown line into their README.
 
