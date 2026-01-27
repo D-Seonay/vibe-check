@@ -1,3 +1,18 @@
+import ejs from 'ejs';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// --- Fix for __dirname in ES Modules ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// ---------------------------------------
+
+const profileTemplate = fs.readFileSync(path.resolve(__dirname, 'profile.ejs'), 'utf8');
+const callbackPreviewTemplate = fs.readFileSync(path.resolve(__dirname, 'callback_preview.ejs'), 'utf8');
+const connectTemplate = fs.readFileSync(path.resolve(__dirname, 'connect.ejs'), 'utf8');
+const mosaicTemplate = fs.readFileSync(path.resolve(__dirname, 'mosaic.ejs'), 'utf8');
+
 function sanitizeText(str, maxLength = 100) {
   return [...String(str)]
     .slice(0, maxLength)
@@ -28,7 +43,7 @@ const THEMES = {
   }
 };
 
-function getTheme(themeName) {
+export function getTheme(themeName) {
   return THEMES[themeName] || THEMES.dark;
 }
 import ejs from 'ejs';
@@ -229,8 +244,6 @@ export function renderCurrentStatusSVG(nowPlaying) {
 </svg>`;
 }
 
-export function renderProfileSVG(profile, themeName = 'dark') {
-  const { bg, fg, sub } = getTheme(themeName);
 export function renderProfileSVG(profile, imageAsB64, topArtists, topTracks, options = {}) {
   const {
     bg_color = '#121212',
@@ -254,17 +267,6 @@ export function renderProfileSVG(profile, imageAsB64, topArtists, topTracks, opt
   const followers = profile?.followers?.total ?? 0;
   const hasImage = imageAsB64 !== null;
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Profile">
-  <title>Spotify Profile</title>
-  <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
-  <text x="16" y="32" fill="${fg}" font-size="20" font-family="system-ui" font-weight="700">${name}</text>
-  <text x="16" y="56" fill="${sub}" font-size="14" font-family="system-ui">Followers: ${followers}</text>
-  <text x="16" y="78" fill="${sub}" font-size="12" font-family="system-ui">ID: ${sanitizeText(
-    profile?.id || "",
-    40
-  )}</text>
-</svg>`;
   let bgFill = bg_color;
   if (gradient_bg) {
     bgFill = `url(#bgGradient)`;

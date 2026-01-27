@@ -12,6 +12,7 @@ import {
   renderCallbackPreviewHTML,
   renderConnectPage,
   renderListeningMosaicSVG,
+  getTheme,
 } from './svg.js';
 import { createRateLimiter } from './rateLimit.js';
 import {
@@ -210,22 +211,6 @@ export function createRouter(config) {
         host, // Pass the host to the template
       });
 
-      const html = `<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Token généré</title></head>
-<body style="font-family: system-ui; padding: 24px;">
-  <h1>Token généré ✅</h1>
-  <p>Copie les lignes Markdown ci-dessous dans ton README.md:</p>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdNow}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdTopTracks}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdRecent}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdTopArtists}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdStatus}</pre>
-  <pre style="background:#f5f5f5;padding:12px;border-radius:6px;">${mdProfile}</pre>
-  <p><strong>Themes:</strong> Ajoute <code>&theme=light</code> à l'URL pour un thème clair.</p>
-  <p><strong>Important:</strong> Ce JWT expire dans ${JWT_EXPIRES_IN}. Tu pourras revenir sur <a href="/connect">/connect</a> pour régénérer un token.</p>
-</body>
-</html>`;
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'no-store');
       res.send(html);
@@ -629,18 +614,17 @@ export function createRouter(config) {
    */
   router.get('/api/profile', async (req, res) => {
     try {
-      const jwt = req.query.jwt;
       const theme = req.query.theme;
       const {
         jwt,
-        bg_color = '121212',
-        text_color = 'FFFFFF',
-        subtext_color = 'B3B3B3',
-        title_color = 'FFFFFF',
+        bg_color,
+        text_color,
+        subtext_color,
+        title_color,
         show_id = 'false',
         show_followers = 'true',
         show_top_artist = 'true',
-        show_top_tracks = 'true', // Ajout du paramètre pour les top tracks
+        show_top_tracks = 'true',
         top_artists_limit = '3',
         gradient_bg = 'false',
         gradient_start_color = '444444',
@@ -702,11 +686,19 @@ export function createRouter(config) {
         }
       }
       
+      // Determine colors based on theme, but allow overrides if query params are present
+      const themeColors = getTheme(theme);
+      
+      // Map theme colors to profile options (strip #)
+      const themeBg = themeColors.bg.replace('#', '');
+      const themeFg = themeColors.fg.replace('#', '');
+      const themeSub = themeColors.sub.replace('#', '');
+      
       const options = {
-        bg_color: `#${bg_color}`,
-        text_color: `#${text_color}`,
-        subtext_color: `#${subtext_color}`,
-        title_color: `#${title_color}`,
+        bg_color: `#${bg_color || themeBg}`,
+        text_color: `#${text_color || themeFg}`,
+        subtext_color: `#${subtext_color || themeSub}`,
+        title_color: `#${title_color || themeFg}`,
         show_id: show_id === 'true',
         show_followers: show_followers === 'true',
         gradient_bg: gradient_bg === 'true',
@@ -744,7 +736,6 @@ export function createRouter(config) {
 
       const listeningHistory = await getListeningHistory(accessToken, { maxPages: 20 });
 
-      const svg = renderProfileSVG(profile, theme);
       const svg = renderListeningMosaicSVG(listeningHistory);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -753,7 +744,6 @@ export function createRouter(config) {
       console.error(err);
       res.setHeader('Content-Type', 'image/svg+xml');
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-      res.status(200).send(renderProfileSVG(null, req.query.theme));
       res.status(200).send(renderListeningMosaicSVG([]));
     }
   });
