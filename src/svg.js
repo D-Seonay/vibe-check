@@ -46,21 +46,6 @@ const THEMES = {
 export function getTheme(themeName) {
   return THEMES[themeName] || THEMES.dark;
 }
-import ejs from 'ejs';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url'; // Added for ES Module compatibility
-import { sanitizeText } from './utils.js';
-
-// --- Fix for __dirname in ES Modules ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-// ---------------------------------------
-
-const profileTemplate = fs.readFileSync(path.resolve(__dirname, 'profile.ejs'), 'utf8');
-const callbackPreviewTemplate = fs.readFileSync(path.resolve(__dirname, 'callback_preview.ejs'), 'utf8');
-const connectTemplate = fs.readFileSync(path.resolve(__dirname, 'connect.ejs'), 'utf8');
-const mosaicTemplate = fs.readFileSync(path.resolve(__dirname, 'mosaic.ejs'), 'utf8');
 
 export function renderNowPlayingSVG(nowPlaying, themeName = 'dark') {
   const { bg, fg, sub, progress, barBg } = getTheme(themeName);
@@ -97,7 +82,6 @@ export function renderNowPlayingSVG(nowPlaying, themeName = 'dark') {
   <text x="16" y="28" fill="${fg}" font-size="18" font-family="system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial" font-weight="600">${line}</text>
   <text x="16" y="50" fill="${sub}" font-size="14" font-family="system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial">${artist}${album ? " • " + album : ""}</text>
   <rect x="16" y="60" width="${width - 32}" height="8" fill="${barBg}" rx="4" />
-  <rect x="16" y="60" width="${width - 32}" height="8" fill="#2A2A2A" rx="4" />
   <rect x="16" y="60" width="${Math.floor(
     (width - 32) * (progressPercent / 100)
   )}" height="8" fill="${progress}" rx="4" />
@@ -112,8 +96,6 @@ export function renderTopTracksSVG(items, themeName = 'dark') {
   const count = Math.min(items?.length || 0, 10);
   const height = padding * 2 + lineHeight * (count + 1);
 
-  const fg = "#FFFFFF";
-
   let lines = "";
   for (let i = 0; i < count; i++) {
     const t = items[i];
@@ -122,7 +104,6 @@ export function renderTopTracksSVG(items, themeName = 'dark') {
     const y = padding + lineHeight * (i + 2);
     lines += `
   <text x="${padding}" y="${y}" fill="${sub}" font-size="14" font-family="system-ui">
-  <text x="${padding}" y="${y}" fill="#B3B3B3" font-size="14" font-family="system-ui">
     ${i + 1}. ${name} — ${artist}
   </text>
 `;
@@ -132,15 +113,15 @@ export function renderTopTracksSVG(items, themeName = 'dark') {
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Top Tracks">
   <title>Spotify Top Tracks</title>
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
-  <rect x="0" y="0" width="${width}" height="${height}" fill="#121212" rx="8" />
-  <text x="${padding}" y="${padding + 16}" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Tracks (4 semaines)</text>
+  <text x="${padding}" y="${
+    padding + 16
+  }" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Tracks (4 semaines)</text>
   ${lines}
 </svg>`;
 }
 
 export function renderRecentTracksSVG(items, themeName = 'dark') {
   const { bg, fg, sub } = getTheme(themeName);
-export function renderRecentTracksSVG(items) {
   const width = 540;
   const padding = 16;
   const lineHeight = 22;
@@ -163,8 +144,6 @@ export function renderRecentTracksSVG(items) {
     lines += `
       <text x="${padding}" y="${y}" fill="${sub}" font-size="14" font-family="system-ui">
         ${i + 1}. ${name} — ${artist}${playedAt ? " • " + playedAt : ""}
-      <text x="${padding}" y="${y}" fill="#B3B3B3" font-size="14" font-family="system-ui">
-        ${i + 1}. ${name} — ${artist}${playedAt ? " • " + sanitizeText(playedAt, 40) : ""}
       </text>
     `;
   }
@@ -177,18 +156,16 @@ export function renderRecentTracksSVG(items) {
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
 
   <text x="${padding}" y="${padding + 16}" fill="${fg}"
-  <rect x="0" y="0" width="${width}" height="${height}" fill="#121212" rx="8" />
-  <text x="${padding}" y="${padding + 16}" fill="#FFFFFF"
     font-size="18" font-family="system-ui" font-weight="600">
     Titres récemment écoutés
   </text>
+
   ${lines}
 </svg>`;
 }
 
 export function renderTopArtistsSVG(items, themeName = 'dark') {
   const { bg, fg, sub } = getTheme(themeName);
-export function renderTopArtistsSVG(items) {
   const width = 540;
   const padding = 16;
   const lineHeight = 22;
@@ -202,23 +179,21 @@ export function renderTopArtistsSVG(items) {
     const genres = sanitizeText((a.genres || []).slice(0, 3).join(", "), 60);
     const y = padding + lineHeight * (i + 2);
     lines += `<text x="${padding}" y="${y}" fill="${sub}" font-size="14" font-family="system-ui">${i + 1}. ${name}${genres ? " — " + genres : ""}</text>\n`;
-    lines += `<text x="${padding}" y="${y}" fill="#B3B3B3" font-size="14" font-family="system-ui">${i + 1}. ${name}${genres ? " — " + genres : ""}</text>\n`;
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Top Artists">
   <title>Spotify Top Artists</title>
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
-  <text x="${padding}" y="${padding + 16}" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Artistes</text>
-  <rect x="0" y="0" width="${width}" height="${height}" fill="#121212" rx="8" />
-  <text x="${padding}" y="${padding + 16}" fill="#FFFFFF" font-size="18" font-family="system-ui" font-weight="600">Top Artistes</text>
+  <text x="${padding}" y="${
+    padding + 16
+  }" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Artistes</text>
   ${lines}
 </svg>`;
 }
 
 export function renderCurrentStatusSVG(nowPlaying, themeName = 'dark') {
   const { bg, fg, sub, statusText } = getTheme(themeName);
-export function renderCurrentStatusSVG(nowPlaying) {
   const width = 360;
   const height = 60;
 
