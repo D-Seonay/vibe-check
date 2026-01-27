@@ -1,11 +1,13 @@
-// src/server.js
 import express from 'express';
 import dotenv from 'dotenv';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './swagger.js';
 import { createRouter } from './routes.js';
 
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 
 const {
   SPOTIFY_CLIENT_ID: CLIENT_ID,
@@ -19,11 +21,30 @@ const {
   PORT = '3000',
 } = process.env;
 
+// Vérification des variables obligatoires
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !JWT_SECRET) {
-  console.error('Env manquantes: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, JWT_SECRET');
+  console.error('❌ Erreur: Env manquantes. Vérifiez SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, JWT_SECRET dans le fichier .env');
   process.exit(1);
 }
 
+
+// app.get('/api-docs', (req, res) => {
+//   res.redirect('/api-docs/');
+// });
+
+
+const swaggerOptions = {
+  customCssUrl: 'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css',
+  customJs: [
+    'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js',
+    'https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js'
+  ],
+};
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
+// -----------------------
+
+// Montage des routes de l'application
 app.use(
   createRouter({
     CLIENT_ID,
@@ -38,5 +59,6 @@ app.use(
 );
 
 app.listen(Number(PORT), () => {
-  console.log(`Spotify OAuth + SVG server listening on ${PORT}`);
+  console.log(`✅ Server Spotify SVG démarré sur http://localhost:${PORT}`);
+  console.log(`📄 Documentation disponible sur http://localhost:${PORT}/api-docs/`);
 });
