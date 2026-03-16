@@ -76,8 +76,8 @@ export function renderNowPlayingSVG(nowPlaying, themeName = 'dark') {
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Now Playing">
-  <title>Spotify Now Playing</title>
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VibeCheck Now Playing">
+  <title>VibeCheck Now Playing</title>
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
   <text x="16" y="28" fill="${fg}" font-size="18" font-family="system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial" font-weight="600">${line}</text>
   <text x="16" y="50" fill="${sub}" font-size="14" font-family="system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial">${artist}${album ? " • " + album : ""}</text>
@@ -110,8 +110,8 @@ export function renderTopTracksSVG(items, themeName = 'dark') {
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Top Tracks">
-  <title>Spotify Top Tracks</title>
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VibeCheck Top Tracks">
+  <title>VibeCheck Top Tracks</title>
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
   <text x="${padding}" y="${padding + 16}" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Tracks (4 semaines)</text>
   ${lines}
@@ -148,8 +148,8 @@ export function renderRecentTracksSVG(items, themeName = 'dark') {
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"
-  xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Recently Played">
-  <title>Spotify Recently Played</title>
+  xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VibeCheck Recently Played">
+  <title>VibeCheck Recently Played</title>
 
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
 
@@ -180,8 +180,8 @@ export function renderTopArtistsSVG(items, themeName = 'dark') {
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Top Artists">
-  <title>Spotify Top Artists</title>
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VibeCheck Top Artists">
+  <title>VibeCheck Top Artists</title>
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
   <text x="${padding}" y="${padding + 16}" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Artistes</text>
   ${lines}
@@ -206,8 +206,8 @@ export function renderCurrentStatusSVG(nowPlaying, themeName = 'dark') {
   }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spotify Status">
-  <title>Spotify Status</title>
+<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VibeCheck Status">
+  <title>VibeCheck Status</title>
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
   <text x="12" y="22" fill="${statusText}" font-size="14" font-family="system-ui" font-weight="600">${status}</text>
   <text x="12" y="38" fill="${fg}" font-size="14" font-family="system-ui">${line1}</text>
@@ -234,7 +234,7 @@ export function renderProfileSVG(profile, imageAsB64, topArtists, topTracks, opt
   if(topArtists.length > 0) height = 300;
   if(topTracks.length > 0) height = 480;
 
-  const name = sanitizeText(profile?.display_name || "Utilisateur Spotify", 60);
+  const name = sanitizeText(profile?.display_name || "Utilisateur VibeCheck", 60);
   const followers = profile?.followers?.total ?? 0;
   const hasImage = imageAsB64 !== null;
 

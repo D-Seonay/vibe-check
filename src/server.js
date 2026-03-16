@@ -20,7 +20,7 @@ const {
 } = process.env;
 
 if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI || !JWT_SECRET) {
-  console.error('Env manquantes: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, JWT_SECRET');
+  console.error('❌ Erreur: Env manquantes. Vérifiez SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI, JWT_SECRET pour VibeCheck dans le fichier .env');
   process.exit(1);
 }
 
@@ -38,5 +38,6 @@ app.use(
 );
 
 app.listen(Number(PORT), () => {
-  console.log(`Spotify OAuth + SVG server listening on ${PORT}`);
+  console.log(`✅ Server VibeCheck SVG démarré sur http://localhost:${PORT}`);
+  console.log(`📄 Documentation disponible sur http://localhost:${PORT}/api-docs/`);
 });
