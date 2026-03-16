@@ -13,7 +13,7 @@ export async function refreshAccessToken({ clientId, clientSecret, refreshToken 
     Authorization: `Basic ${basic}`,
   });
   if (!res.access_token) {
-    throw new Error('Impossible de rafraîchir le token Spotify');
+    throw new Error('Impossible de rafraîchir le token VibeCheck');
   }
   return res.access_token;
 }

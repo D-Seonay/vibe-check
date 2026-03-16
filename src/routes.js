@@ -1,7 +1,7 @@
 import express from 'express';
 import crypto from 'crypto';
 import querystring from 'querystring';
-import { signJWT, verifyJWT } from './jwt.js';
+import { encryptToken, decryptToken } from './jwt.js';
 import {
   renderNowPlayingSVG,
   renderTopTracksSVG,
@@ -44,7 +44,7 @@ export function createRouter(config) {
    * @swagger
    * /:
    *   get:
-   *     summary: Connect to Spotify
+   *     summary: Connect to VibeCheck
    *     description: Redirects to Spotify to authorize the application.
    *     responses:
    *       302:
@@ -79,7 +79,7 @@ export function createRouter(config) {
    * @swagger
    * /callback:
    *   get:
-   *     summary: Spotify callback
+   *     summary: VibeCheck callback
    *     description: Handles the callback from Spotify after authorization.
    *     parameters:
    *       - in: query
@@ -90,7 +90,7 @@ export function createRouter(config) {
    *         description: The authorization code from Spotify.
    *     responses:
    *       200:
-   *         description: Shows the generated JWT and markdown snippets.
+   *         description: Shows the generated token and markdown snippets.
    *       400:
    *         description: Missing or invalid authorization code.
    */
@@ -120,19 +120,19 @@ export function createRouter(config) {
         return res.status(400).send('Refresh token introuvable (vérifie les scopes et consentement)');
       }
 
-      const jwt = signJWT({ rt: refreshToken }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+      const token = encryptToken({ rt: refreshToken }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
       const host = hostForMarkdown || req.headers.host;
-      const mdNow = `![Spotify Now Playing](https://${host}/api/now-playing?jwt=${encodeURIComponent(jwt)})`;
-      const mdTopTracks = `![Spotify Top Tracks](https://${host}/api/top-tracks?jwt=${encodeURIComponent(jwt)}&limit=10)`;
-      const mdRecent = `![Spotify Recently Played](https://${host}/api/recent-tracks?jwt=${encodeURIComponent(jwt)}&limit=10)`;
-      const mdTopArtists = `![Spotify Top Artists](https://${host}/api/top-artists?jwt=${encodeURIComponent(jwt)}&limit=10&time_range=short_term)`;
-      const mdStatus = `![Spotify Status](https://${host}/api/current-status?jwt=${encodeURIComponent(jwt)})`;
-      const mdProfile = `![Spotify Profile](https://${host}/api/profile?jwt=${encodeURIComponent(jwt)})`;
-      const mdMosaic = `![Spotify Listening Mosaic](https://${host}/api/listening-mosaic?jwt=${encodeURIComponent(jwt)})`;
+      const mdNow = `![VibeCheck Now Playing](https://${host}/api/now-playing?token=${encodeURIComponent(token)})`;
+      const mdTopTracks = `![VibeCheck Top Tracks](https://${host}/api/top-tracks?token=${encodeURIComponent(token)}&limit=10)`;
+      const mdRecent = `![VibeCheck Recently Played](https://${host}/api/recent-tracks?token=${encodeURIComponent(token)}&limit=10)`;
+      const mdTopArtists = `![VibeCheck Top Artists](https://${host}/api/top-artists?token=${encodeURIComponent(token)}&limit=10&time_range=short_term)`;
+      const mdStatus = `![VibeCheck Status](https://${host}/api/current-status?token=${encodeURIComponent(token)})`;
+      const mdProfile = `![VibeCheck Profile](https://${host}/api/profile?token=${encodeURIComponent(token)})`;
+      const mdMosaic = `![VibeCheck Listening Mosaic](https://${host}/api/listening-mosaic?token=${encodeURIComponent(token)})`;
 
       // --- New logic for preview ---
-      const payload = verifyJWT(jwt, JWT_SECRET); // Verify the JWT just generated to get payload.rt for subsequent calls
+      const payload = decryptToken(token, JWT_SECRET); // Verify the token just generated to get payload.rt for subsequent calls
 
       const accessToken = await refreshAccessToken({
         clientId: CLIENT_ID,
@@ -192,7 +192,7 @@ export function createRouter(config) {
 
       // Render the new preview HTML
       const html = renderCallbackPreviewHTML({
-        jwt,
+        jwt: token,
         mdNow,
         mdTopTracks,
         mdRecent,
@@ -228,11 +228,11 @@ export function createRouter(config) {
    *     summary: Get currently playing song as an SVG.
    *     parameters:
    *       - in: query
-   *         name: jwt
+   *         name: token
    *         schema:
    *           type: string
    *         required: true
-   *         description: The JWT token.
+   *         description: The encryption token.
    *     responses:
    *       200:
    *         description: An SVG image of the currently playing song.
@@ -244,13 +244,13 @@ export function createRouter(config) {
    */
   router.get('/api/now-playing', async (req, res) => {
     try {
-      const jwt = req.query.jwt;
+      const token = req.query.token || req.query.jwt;
       const theme = req.query.theme;
-      if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
-      if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
+      if (!token || typeof token !== 'string') return res.status(400).send('Paramètre manquant: token');
+      if (!rateLimit(token)) return res.status(429).send('Trop de requêtes');
 
-      const payload = verifyJWT(jwt, JWT_SECRET);
-      if (!payload?.rt) return res.status(401).send('JWT invalide ou expiré');
+      const payload = decryptToken(token, JWT_SECRET);
+      if (!payload?.rt) return res.status(401).send('Token invalide ou expiré');
 
       const accessToken = await refreshAccessToken({
         clientId: CLIENT_ID,
@@ -279,11 +279,11 @@ export function createRouter(config) {
    *     summary: Get top tracks as an SVG.
    *     parameters:
    *       - in: query
-   *         name: jwt
+   *         name: token
    *         schema:
    *           type: string
    *         required: true
-   *         description: The JWT token.
+   *         description: The encryption token.
    *       - in: query
    *         name: limit
    *         schema:
@@ -303,14 +303,14 @@ export function createRouter(config) {
    */
   router.get('/api/top-tracks', async (req, res) => {
     try {
-      const jwt = req.query.jwt;
+      const token = req.query.token || req.query.jwt;
       const theme = req.query.theme;
       const limit = Math.max(1, Math.min(10, Number(req.query.limit || 5)));
-      if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
-      if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
+      if (!token || typeof token !== 'string') return res.status(400).send('Paramètre manquant: token');
+      if (!rateLimit(token)) return res.status(429).send('Trop de requêtes');
 
-      const payload = verifyJWT(jwt, JWT_SECRET);
-      if (!payload?.rt) return res.status(401).send('JWT invalide ou expiré');
+      const payload = decryptToken(token, JWT_SECRET);
+      if (!payload?.rt) return res.status(401).send('Token invalide ou expiré');
 
       const accessToken = await refreshAccessToken({
         clientId: CLIENT_ID,
@@ -339,11 +339,11 @@ export function createRouter(config) {
    *     summary: Get recently played tracks as an SVG.
    *     parameters:
    *       - in: query
-   *         name: jwt
+   *         name: token
    *         schema:
    *           type: string
    *         required: true
-   *         description: The JWT token.
+   *         description: The encryption token.
    *       - in: query
    *         name: limit
    *         schema:
@@ -363,14 +363,14 @@ export function createRouter(config) {
    */
   router.get('/api/recent-tracks', async (req, res) => {
     try {
-      const jwt = req.query.jwt;
+      const token = req.query.token || req.query.jwt;
       const theme = req.query.theme;
       const limit = Math.max(1, Math.min(50, Number(req.query.limit || 10)));
-      if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
-      if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
+      if (!token || typeof token !== 'string') return res.status(400).send('Paramètre manquant: token');
+      if (!rateLimit(token)) return res.status(429).send('Trop de requêtes');
 
-      const payload = verifyJWT(jwt, JWT_SECRET);
-      if (!payload?.rt) return res.status(401).send('JWT invalide ou expiré');
+      const payload = decryptToken(token, JWT_SECRET);
+      if (!payload?.rt) return res.status(401).send('Token invalide ou expiré');
 
       const accessToken = await refreshAccessToken({
         clientId: CLIENT_ID,
@@ -400,11 +400,11 @@ export function createRouter(config) {
    *     summary: Get top artists as an SVG.
    *     parameters:
    *       - in: query
-   *         name: jwt
+   *         name: token
    *         schema:
    *           type: string
    *         required: true
-   *         description: The JWT token.
+   *         description: The encryption token.
    *       - in: query
    *         name: limit
    *         schema:
@@ -431,7 +431,7 @@ export function createRouter(config) {
    */
   router.get('/api/top-artists', async (req, res) => {
     try {
-      const jwt = req.query.jwt;
+      const token = req.query.token || req.query.jwt;
       const theme = req.query.theme;
       const limit = Math.max(1, Math.min(10, Number(req.query.limit || 5)));
       const timeRangeRaw = String(req.query.time_range || 'short_term');
@@ -439,11 +439,11 @@ export function createRouter(config) {
         ? timeRangeRaw
         : 'short_term';
 
-      if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
-      if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
+      if (!token || typeof token !== 'string') return res.status(400).send('Paramètre manquant: token');
+      if (!rateLimit(token)) return res.status(429).send('Trop de requêtes');
 
-      const payload = verifyJWT(jwt, JWT_SECRET);
-      if (!payload?.rt) return res.status(401).send('JWT invalide ou expiré');
+      const payload = decryptToken(token, JWT_SECRET);
+      if (!payload?.rt) return res.status(401).send('Token invalide ou expiré');
 
       const accessToken = await refreshAccessToken({
         clientId: CLIENT_ID,
@@ -470,14 +470,14 @@ export function createRouter(config) {
    * @swagger
    * /api/current-status:
    *   get:
-   *     summary: Get current Spotify status as an SVG.
+   *     summary: Get current VibeCheck status as an SVG.
    *     parameters:
    *       - in: query
-   *         name: jwt
+   *         name: token
    *         schema:
    *           type: string
    *         required: true
-   *         description: The JWT token.
+   *         description: The encryption token.
    *     responses:
    *       200:
    *         description: An SVG image of the current Spotify status.
@@ -489,13 +489,13 @@ export function createRouter(config) {
    */
   router.get('/api/current-status', async (req, res) => {
     try {
-      const jwt = req.query.jwt;
+      const token = req.query.token || req.query.jwt;
       const theme = req.query.theme;
-      if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
-      if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
+      if (!token || typeof token !== 'string') return res.status(400).send('Paramètre manquant: token');
+      if (!rateLimit(token)) return res.status(429).send('Trop de requêtes');
 
-      const payload = verifyJWT(jwt, JWT_SECRET);
-      if (!payload?.rt) return res.status(401).send('JWT invalide ou expiré');
+      const payload = decryptToken(token, JWT_SECRET);
+      if (!payload?.rt) return res.status(401).send('Token invalide ou expiré');
 
       const accessToken = await refreshAccessToken({
         clientId: CLIENT_ID,
@@ -524,11 +524,11 @@ export function createRouter(config) {
    *     summary: Get user profile as an SVG.
    *     parameters:
    *       - in: query
-   *         name: jwt
+   *         name: token
    *         schema:
    *           type: string
    *         required: true
-   *         description: The JWT token.
+   *         description: The encryption token.
    *       - in: query
    *         name: bg_color
    *         schema:
@@ -558,7 +558,7 @@ export function createRouter(config) {
    *         schema:
    *           type: boolean
    *         default: false
-   *         description: Show Spotify user ID.
+   *         description: Show VibeCheck user ID.
    *       - in: query
    *         name: show_followers
    *         schema:
@@ -616,7 +616,8 @@ export function createRouter(config) {
     try {
       const theme = req.query.theme;
       const {
-        jwt,
+        token: tokenQuery,
+        jwt: jwtQuery,
         bg_color,
         text_color,
         subtext_color,
@@ -632,11 +633,13 @@ export function createRouter(config) {
         border_radius = '8',
       } = req.query;
 
-      if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
-      if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
+      const token = tokenQuery || jwtQuery;
 
-      const payload = verifyJWT(jwt, JWT_SECRET);
-      if (!payload?.rt) return res.status(401).send('JWT invalide ou expiré');
+      if (!token || typeof token !== 'string') return res.status(400).send('Paramètre manquant: token');
+      if (!rateLimit(token)) return res.status(429).send('Trop de requêtes');
+
+      const payload = decryptToken(token, JWT_SECRET);
+      if (!payload?.rt) return res.status(401).send('Token invalide ou expiré');
 
       const accessToken = await refreshAccessToken({
         clientId: CLIENT_ID,
@@ -721,12 +724,12 @@ export function createRouter(config) {
 
   router.get('/api/listening-mosaic', async (req, res) => {
     try {
-      const jwt = req.query.jwt;
-      if (!jwt || typeof jwt !== 'string') return res.status(400).send('Paramètre manquant: jwt');
-      if (!rateLimit(jwt)) return res.status(429).send('Trop de requêtes');
+      const token = req.query.token || req.query.jwt;
+      if (!token || typeof token !== 'string') return res.status(400).send('Paramètre manquant: token');
+      if (!rateLimit(token)) return res.status(429).send('Trop de requêtes');
 
-      const payload = verifyJWT(jwt, JWT_SECRET);
-      if (!payload?.rt) return res.status(401).send('JWT invalide ou expiré');
+      const payload = decryptToken(token, JWT_SECRET);
+      if (!payload?.rt) return res.status(401).send('Token invalide ou expiré');
 
       const accessToken = await refreshAccessToken({
         clientId: CLIENT_ID,

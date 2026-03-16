@@ -1,13 +1,13 @@
 # VibeCheck Spotify Status for README.md
 
-Generate dynamic Spotify SVG images (Now Playing and Top Tracks) that anyone can embed in their GitHub README.md using a single URL. Users connect their Spotify once, get a secure JWT, and paste the provided Markdown line into their README.
+Generate dynamic VibeCheck images (Now Playing and Top Tracks) that anyone can embed in their GitHub README.md using a single URL. Users connect their Spotify once, get a secure JWT, and paste the provided Markdown line into their README.
 
 ## Features
 - OAuth “Connect” flow to obtain Spotify refresh_token securely
 - JWT-signed token in URL (no refresh_token exposed)
 - SVG endpoints:
-  - `/api/now-playing?jwt=...`xx
-  - `/api/top-tracks?jwt=...&limit=10`
+  - `/api/now-playing?token=...`xx
+  - `/api/top-tracks?token=...&limit=10`
 - Rate limiting and basic sanitization
 - Stateless server (no DB needed)
 
@@ -67,8 +67,8 @@ https://your-domain.com/
 2) Authorize with Spotify when prompted.
 3) After redirect, the page shows a live preview of your widgets and ready-to-copy Markdown snippets containing a JWT:
 ```
-![Spotify Now Playing](https://your-domain.com/api/now-playing?jwt=<paste-your-jwt>)
-![Spotify Top Tracks](https://your-domain.com/api/top-tracks?jwt=<paste-your-jwt>&limit=10)
+![Spotify Now Playing](https://your-domain.com/api/now-playing?token=<paste-your-jwt>)
+![Spotify Top Tracks](https://your-domain.com/api/top-tracks?token=<paste-your-jwt>&limit=10)
 ```
 4) Paste one of these lines into your GitHub README.md. Done.
 
@@ -84,12 +84,12 @@ Note: The JWT expires according to `JWT_EXPIRES_IN` (default 30 days). Users can
 - GET `/callback?code=...`
   - Spotify callback. Exchanges code for `refresh_token`, returns a web page showing Markdown snippets with a signed JWT *and a live preview of the generated widgets*.
 
-- GET `/api/now-playing?jwt=...`
+- GET `/api/now-playing?token=...`
   - Returns an SVG image with current track and progress bar.
   - Content-Type: `image/svg+xml`
   - Cache-Control: `no-cache, no-store, must-revalidate`
 
-- GET `/api/top-tracks?jwt=...&limit=10`
+- GET `/api/top-tracks?token=...&limit=10`
   - Returns an SVG with top tracks (short_term ~ 4 weeks).
   - `limit`: 1–10
   - Content-Type: `image/svg+xml`
