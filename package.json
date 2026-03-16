@@ -2,16 +2,20 @@
   "name": "vibecheck",
   "version": "1.0.0",
   "type": "module",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "NODE_ENV=development node server.js",
+    "start": "node src/server.js",
+    "dev": "NODE_ENV=development node src/server.js",
     "test": "jest --env=node --runInBand",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "build": ":"
   },
   "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
     "express": "^4.21.1",
-    "dotenv": "^16.4.5"
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "jest": "^29.7.0",

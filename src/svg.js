@@ -113,7 +113,9 @@ export function renderTopTracksSVG(items, themeName = 'dark') {
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VibeCheck Top Tracks">
   <title>VibeCheck Top Tracks</title>
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
-  <text x="${padding}" y="${padding + 16}" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Tracks (4 semaines)</text>
+  <text x="${padding}" y="${
+    padding + 16
+  }" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Tracks (4 semaines)</text>
   ${lines}
 </svg>`;
 }
@@ -183,7 +185,9 @@ export function renderTopArtistsSVG(items, themeName = 'dark') {
 <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="VibeCheck Top Artists">
   <title>VibeCheck Top Artists</title>
   <rect x="0" y="0" width="${width}" height="${height}" fill="${bg}" rx="8" />
-  <text x="${padding}" y="${padding + 16}" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Artistes</text>
+  <text x="${padding}" y="${
+    padding + 16
+  }" fill="${fg}" font-size="18" font-family="system-ui" font-weight="600">Top Artistes</text>
   ${lines}
 </svg>`;
 }

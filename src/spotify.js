@@ -51,3 +51,23 @@ export async function getMe(accessToken) {
     Authorization: `Bearer ${accessToken}`,
   });
 }
+
+export async function getListeningHistory(accessToken, { maxPages = 20 } = {}) {
+  let items = [];
+  let nextUrl = `https://api.spotify.com/v1/me/player/recently-played?limit=50`;
+
+  for (let i = 0; i < maxPages && nextUrl; i++) {
+    const response = await get(nextUrl, {
+      Authorization: `Bearer ${accessToken}`,
+    });
+
+    if (!response || !response.items) {
+      break;
+    }
+
+    items = items.concat(response.items);
+    nextUrl = response.next;
+  }
+
+  return items;
+}
